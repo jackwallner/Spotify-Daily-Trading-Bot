@@ -52,10 +52,14 @@ jobs:
         env:
           KALSHI_API_KEY_ID: ${{ secrets.KALSHI_API_KEY_ID }}
           KALSHI_PRIVATE_KEY: ${{ secrets.KALSHI_PRIVATE_KEY }}
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
         run: |
           cat > .env << 'EOF'
           KALSHI_API_KEY_ID=$KALSHI_API_KEY_ID
           KALSHI_PRIVATE_KEY=$KALSHI_PRIVATE_KEY
+          SPOTIFY_CLIENT_ID=$SPOTIFY_CLIENT_ID
+          SPOTIFY_CLIENT_SECRET=$SPOTIFY_CLIENT_SECRET
           EOF
           echo "✓ Created .env file"
 
@@ -64,6 +68,8 @@ jobs:
           KALSHI_API_KEY_ID: ${{ secrets.KALSHI_API_KEY_ID }}
           KALSHI_PRIVATE_KEY: ${{ secrets.KALSHI_PRIVATE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
         run: python trading_bot.py
 
       - name: Generate HTML report
