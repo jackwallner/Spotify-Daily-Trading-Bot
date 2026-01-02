@@ -264,10 +264,13 @@ def place_trade(kalshi_client, market, side: str, limit_price: int, contract_cou
         except Exception:
             order_id = None
 
+        # Only mark as Success if we got an order_id back from Kalshi
+        success = bool(order_response and order_id)
+        
         return {
-            "status": "Success" if order_response else "Failed",
-            "price": limit_price,
-            "contracts": contract_count,
+            "status": "Success" if success else "Failed",
+            "price": limit_price if success else None,
+            "contracts": contract_count if success else None,
             "order_response": order_response,
             "order_id": order_id,
         }
@@ -358,8 +361,19 @@ def main():
             print(f"[SPOTIFY] Rationale: {signal.get('rationale')} | popΔ={signal.get('pop_delta')} (thresh={signal.get('pop_delta_threshold')})")
 
             # 2) Fetch Kalshi markets for the event
-            markets_resp = kalshi_client.get_markets(event_ticker=event_ticker, status="open", limit=200)
-            markets = getattr(markets_resp, "markets", None) or []
+            # Try lowercase first, then uppercase
+            markets = []
+            for ticker_variant in [event_ticker, event_ticker.upper()]:
+                try:
+                    markets_resp = kalshi_client.get_markets(event_ticker=ticker_variant, status="open", limit=200)
+                    markets = getattr(markets_resp, "markets", None) or []
+                    if markets:
+                        print(f"[KALSHI] Found {len(markets)} markets for event (using ticker: {ticker_variant})")
+                        break
+                except Exception as e:
+                    print(f"[KALSHI] No markets found with ticker {ticker_variant}")
+                    continue
+            
             if not markets:
                 log_trade(event_ticker, "NO TRADE", "No open markets found for event", asset="SPOTIFY", decision_log=signal)
                 continue
