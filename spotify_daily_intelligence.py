@@ -3,14 +3,13 @@
 Spotify Daily Market Intelligence.
 
 Core idea (simplified):
-- Use Spotify "Top 50" chart playlists as an easy-to-track signal.
+- Use Kworb chart data to track Spotify daily rankings.
 - Decide whether the current #1 is safe, or if #2 is likely to flip.
 - Map the predicted #1 track to the matching Kalshi market contract and buy YES.
 
 Data sources:
-- Spotify playlists (via `spotipy`) for rank + popularity proxy
-  - Global Top 50: 37i9dQZEVXbMDoHDwVN2tF
-  - USA Top 50:    37i9dQZEVXbLRQDuF5jeBp
+- Kworb.net for daily Spotify chart data (US and Global)
+  - Provides real-time stream counts and rankings
 """
 
 from __future__ import annotations
@@ -22,10 +21,9 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
 
 from spotify_daily_markets import get_market_close_ts
+from kworb_scraper import get_chart_snapshot
 
 
 def _get_attr(obj, name: str, default=None):
@@ -47,53 +45,8 @@ class SpotifyDecisionThresholds:
     skip_zone_high: float = 55.0
 
 
-GLOBAL_TOP_50_PLAYLIST_ID = "37i9dQZEVXbMDoHDwVN2tF"
-US_TOP_50_PLAYLIST_ID = "37i9dQZEVXbLRQDuF5jeBp"
-
-
 def _normalize_text(s: str) -> str:
     return "".join(ch.lower() for ch in (s or "") if ch.isalnum() or ch.isspace()).strip()
-
-
-def _spotify_client() -> spotipy.Spotify:
-    client_id = os.getenv("SPOTIFY_CLIENT_ID")
-    client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
-    if not client_id or not client_secret:
-        raise RuntimeError("Missing SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET")
-    auth = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
-    return spotipy.Spotify(auth_manager=auth, requests_timeout=15, retries=3)
-
-
-def get_chart_snapshot(playlist_id: str, region: str) -> List[Dict[str, Any]]:
-    """
-    Returns list of track dicts for current playlist ordering.
-    Note: Spotify API doesn't expose raw streams here; we use rank + popularity proxy.
-    """
-    sp = _spotify_client()
-    results = sp.playlist_items(playlist_id, additional_types=("track",), limit=50)
-    items = results.get("items", []) or []
-    rows: List[Dict[str, Any]] = []
-
-    for idx, item in enumerate(items):
-        track = (item or {}).get("track") or {}
-        if not track:
-            continue
-        artists = track.get("artists") or []
-        artist_name = (artists[0].get("name") if artists else "") or ""
-        title = track.get("name") or ""
-        rows.append(
-            {
-                "rank": idx + 1,
-                "artist": artist_name,
-                "title": title,
-                "popularity": int(track.get("popularity") or 0),
-                "track_id": track.get("id"),
-                "region": region,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-        )
-
-    return rows
 
 
 def playlist_delta_signal(region: str) -> Dict[str, Any]:
@@ -101,50 +54,56 @@ def playlist_delta_signal(region: str) -> Dict[str, Any]:
     Simple signal:
     - incumbent = current #1
     - challenger = current #2
-    - ALWAYS pick the incumbent (#1). We still compute popularity deltas to log
+    - ALWAYS pick the incumbent (#1). We still compute stream/popularity deltas to log
       "volatility" (how close a flip might be).
     """
-    playlist_id = GLOBAL_TOP_50_PLAYLIST_ID if region.lower() == "global" else US_TOP_50_PLAYLIST_ID
-    rows = get_chart_snapshot(playlist_id, region)
+    rows = get_chart_snapshot(region)
     if len(rows) < 2:
-        return {"error": "insufficient_playlist_data", "region": region}
+        return {"error": "insufficient_chart_data", "region": region}
 
     top1 = rows[0]
     top2 = rows[1]
 
     try:
-        pop_delta_threshold = int(os.getenv("SPOTIFY_POP_DELTA_THRESHOLD", "3"))
+        stream_delta_threshold_pct = float(os.getenv("KWORB_STREAM_DELTA_THRESHOLD_PCT", "5.0"))
     except Exception:
-        pop_delta_threshold = 3
+        stream_delta_threshold_pct = 5.0
 
-    pop1 = int(top1.get("popularity") or 0)
-    pop2 = int(top2.get("popularity") or 0)
-    pop_delta = pop2 - pop1
+    streams1 = int(top1.get("streams") or 0)
+    streams2 = int(top2.get("streams") or 0)
+    
+    # Calculate percentage difference
+    if streams1 > 0:
+        stream_delta_pct = ((streams2 - streams1) / streams1) * 100
+    else:
+        stream_delta_pct = 0
 
     predicted = top1
-    rationale = "Always pick current #1 (rank signal)"
+    rationale = "Always pick current #1 (rank signal from Kworb)"
 
-    # Confidence is lower when #2 is gaining on #1 (higher popularity).
-    if pop_delta >= pop_delta_threshold:
+    # Confidence is lower when #2 is close to #1 in streams
+    if stream_delta_pct >= stream_delta_threshold_pct:
         confidence = 5
-        rationale += f"; WARNING: #2 popularity momentum (+{pop_delta}) suggests possible flip"
-    elif pop_delta > 0:
+        rationale += f"; WARNING: #2 within {stream_delta_pct:.1f}% of #1 streams, flip possible"
+    elif stream_delta_pct >= 0:
         confidence = 6
-        rationale += f"; note: #2 popularity slightly higher (+{pop_delta})"
+        rationale += f"; note: #2 has {stream_delta_pct:.1f}% of #1's streams"
     else:
         confidence = 7
+        rationale += f"; #1 leads by {abs(stream_delta_pct):.1f}%"
 
     return {
         "region": region,
-        "playlist_id": playlist_id,
         "top1": top1,
         "top2": top2,
-        "pop_delta": pop_delta,
-        "pop_delta_threshold": pop_delta_threshold,
+        "streams1": streams1,
+        "streams2": streams2,
+        "stream_delta_pct": stream_delta_pct,
+        "stream_delta_threshold_pct": stream_delta_threshold_pct,
         "predicted": predicted,
         "confidence": confidence,
         "rationale": rationale,
-        "framework": "spotify_playlist_delta_v1",
+        "framework": "kworb_stream_delta_v1",
     }
 
 
