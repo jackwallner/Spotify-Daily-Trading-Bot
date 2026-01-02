@@ -187,7 +187,15 @@ Format as JSON:
 """
 
     try:
-        models = ['gemini-2.5-flash-lite', 'gemini-2.0-flash-lite']
+        # Model fallback list ordered by rate limits (RPM)
+        models = [
+            'gemini-2.5-flash-lite',  # 7 RPM
+            'gemini-2.5-flash',       # 3 RPM
+            'gemma-3-27b-it',         # 4 RPM
+            'gemma-3-4b-it',          # 2 RPM
+            'gemma-3-12b-it',         # 1 RPM
+            'gemma-3-1b-it'           # Last resort
+        ]
         for model in models:
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"

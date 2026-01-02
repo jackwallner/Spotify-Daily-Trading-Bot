@@ -128,17 +128,16 @@ ANALYSIS: [your explanation]
 CONFIDENCE: [number 1-10]
 """
 
-    # Try models in order of preference, fallback to others on rate limit
-    # IMPORTANT: Free tier has 20 requests/day limit shared across all models
-    # More fallback models = better resilience when some hit rate limits
+    # Try models in order of rate limits (RPM):
+    # gemini-2.5-flash-lite (7 RPM), gemini-2.5-flash (3 RPM),
+    # gemma-3-27b (4 RPM), gemma-3-4b (2 RPM), gemma-3-12b (1 RPM), gemma-3-1b
     models = [
-        'gemini-2.5-flash-lite',   # Newest, fastest (but on free tier)
-        'gemini-2.5-flash',        # Standard quality (but on free tier)
-        'gemini-2.0-flash-lite',   # Older, still fast (but on free tier)
-        'gemma-3-27b-it',          # Alternative: Large Gemma (27B params)
-        'gemma-3-12b-it',          # Alternative: Medium Gemma (12B params)
-        'gemma-3-4b-it',           # Alternative: Small Gemma (4B params)
-        'gemma-3-1b-it',           # Alternative: Tiny Gemma (1B params - last resort)
+        'gemini-2.5-flash-lite',   # 7 RPM - Highest rate limit
+        'gemini-2.5-flash',        # 3 RPM
+        'gemma-3-27b-it',          # 4 RPM - Large Gemma (27B params)
+        'gemma-3-4b-it',           # 2 RPM - Small Gemma (4B params)
+        'gemma-3-12b-it',          # 1 RPM - Medium Gemma (12B params)
+        'gemma-3-1b-it',           # Tiny Gemma (1B params - last resort)
     ]
     print(f"   Using available models: {models[0]} → {' → '.join(models[1:3])} + {len(models)-3} more fallbacks")
     
@@ -295,15 +294,15 @@ INSIGHTS: [key insights]
 RECOMMENDATIONS: [recommendations]
 """
 
-    # Try models in order of preference, fallback to others on rate limit
-    # NOTE: Free tier has 20 requests/day limit shared across all models
+    # Try models in order of rate limits (RPM):
+    # gemini-2.5-flash-lite (7 RPM), gemini-2.5-flash (3 RPM),
+    # gemma-3-27b (4 RPM), gemma-3-4b (2 RPM), gemma-3-12b (1 RPM), gemma-3-1b
     models = [
-        'gemini-2.5-flash-lite',   # Newest, fastest
-        'gemini-2.5-flash',        # Standard quality
-        'gemini-2.0-flash-lite',   # Older but stable
-        'gemma-3-27b-it',          # Large Gemma (27B)
-        'gemma-3-12b-it',          # Medium Gemma (12B)
-        'gemma-3-4b-it',           # Small Gemma (4B)
+        'gemini-2.5-flash-lite',   # 7 RPM - Highest rate limit
+        'gemini-2.5-flash',        # 3 RPM
+        'gemma-3-27b-it',          # 4 RPM - Large Gemma (27B)
+        'gemma-3-4b-it',           # 2 RPM - Small Gemma (4B)
+        'gemma-3-12b-it',          # 1 RPM - Medium Gemma (12B)
         'gemma-3-1b-it',           # Tiny Gemma (1B - last resort)
     ]
     
@@ -430,15 +429,15 @@ Format as:
 ANALYSIS: [your analysis]
 """
 
-    # Try models in order of preference, fallback to others on rate limit
-    # NOTE: Free tier has 20 requests/day limit shared across all models
+    # Try models in order of rate limits (RPM):
+    # gemini-2.5-flash-lite (7 RPM), gemini-2.5-flash (3 RPM),
+    # gemma-3-27b (4 RPM), gemma-3-4b (2 RPM), gemma-3-12b (1 RPM), gemma-3-1b
     models = [
-        'gemini-2.5-flash-lite',   # Newest, fastest
-        'gemini-2.5-flash',        # Standard quality
-        'gemini-2.0-flash-lite',   # Older but stable
-        'gemma-3-27b-it',          # Large Gemma (27B)
-        'gemma-3-12b-it',          # Medium Gemma (12B)
-        'gemma-3-4b-it',           # Small Gemma (4B)
+        'gemini-2.5-flash-lite',   # 7 RPM - Highest rate limit
+        'gemini-2.5-flash',        # 3 RPM
+        'gemma-3-27b-it',          # 4 RPM - Large Gemma (27B)
+        'gemma-3-4b-it',           # 2 RPM - Small Gemma (4B)
+        'gemma-3-12b-it',          # 1 RPM - Medium Gemma (12B)
         'gemma-3-1b-it',           # Tiny Gemma (1B - last resort)
     ]
     
