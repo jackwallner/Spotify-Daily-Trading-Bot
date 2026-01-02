@@ -8,3 +8,5 @@
 2026-01-02T23:19:22.184954, kxspotifyglobald-26jan02, NO TRADE, No open markets found for event, SPOTIFY, , , 
 2026-01-02T23:41:22.320252, kxspotifyd-26jan02, NO TRADE, Could not match track to a market contract, SPOTIFY, , , 
 2026-01-02T23:41:23.112368, kxspotifyglobald-26jan02, NO TRADE, Could not match track to a market contract, SPOTIFY, , , 
+2026-01-02T23:49:24.839099, KXSPOTIFYD-26JAN02-GOL, Buy YES (spotify_playlist_delta_v1), Success, SPOTIFY, , 19, 1
+2026-01-02T23:49:25.696164, KXSPOTIFYGLOBALD-26JAN02-THE, Buy YES (spotify_playlist_delta_v1), Success, SPOTIFY, , 98, 1
