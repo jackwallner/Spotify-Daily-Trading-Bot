@@ -21,75 +21,8 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'REDACTED_GEMINI_KEY')
 
 
-def generate_song_artwork(track_title, track_artist, predicted_success_rate, region="US"):
-    """
-    Generate song artwork using Gemini's image generation API.
-    
-    Args:
-        track_title: Song title
-        track_artist: Artist name
-        predicted_success_rate: Success rate percentage (0-100)
-        region: US or Global
-    
-    Returns:
-        Base64 encoded image data or None
-    """
-    if not GEMINI_API_KEY:
-        print("Warning: No Gemini API key available")
-        return None
-    
-    # Create a prompt for generating album-style artwork
-    prompt = f"""Create a modern, minimalist album cover artwork for:
-Song: "{track_title}" by {track_artist}
-
-Style: Clean, professional Spotify-style design with:
-- Bold typography showing the song title
-- Artist name subtly displayed
-- A large "{predicted_success_rate}%" success prediction overlay in a corner
-- Color scheme that matches Spotify's aesthetic (greens and blacks)
-- Modern gradient or abstract background
-- Professional music streaming platform look
-
-The success rate should be prominent and easy to read."""
-
-    models_to_try = [
-        'gemini-2.0-flash-exp',
-        'gemini-2.0-flash-lite',
-        'gemini-1.5-flash'
-    ]
-    
-    for model in models_to_try:
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
-            headers = {"Content-Type": "application/json"}
-            data = {
-                "contents": [{
-                    "parts": [{"text": prompt}]
-                }],
-                "generationConfig": {
-                    "temperature": 0.7,
-                    "maxOutputTokens": 2048,
-                }
-            }
-            
-            response = requests.post(url, json=data, headers=headers, timeout=30)
-            
-            if response.status_code == 200:
-                result = response.json()
-                # Note: Gemini text models don't generate images directly
-                # We'll create a styled text-based representation instead
-                return None  # Will use CSS-styled cards instead
-            elif response.status_code == 429:
-                continue  # Try next model
-            else:
-                print(f"Image generation failed with model {model}: {response.status_code}")
-                continue
-                
-        except Exception as e:
-            print(f"Error generating image with {model}: {e}")
-            continue
-    
-    return None
+# NOTE: Gemini doesn't support image generation - that's Imagen API
+# Using styled text cards instead of generated images
 
 
 def get_gemini_analysis(track_title, track_artist, confidence, streams, region):
@@ -205,7 +138,9 @@ def calculate_stats(trades):
             'skipped': 0,
             'success_rate': 0.0,
             'total_cost': 0.0,
-            'avg_confidence': 0.0
+            'avg_confidence': 0.0,
+            'total_pnl': 0.0,
+            'pnl_history': []
         }
     
     successful = len([t for t in trades if t.get('status') == 'Success'])
@@ -213,13 +148,35 @@ def calculate_stats(trades):
     skipped = len([t for t in trades if 'SKIP' in t.get('status', '')])
     
     total_cost = 0.0
+    total_pnl = 0.0
     confidences = []
+    pnl_history = []
+    running_pnl = 0.0
     
     for trade in trades:
         price = trade.get('price')
         contracts = trade.get('contracts')
+        
+        # Calculate cost
         if price and contracts:
-            total_cost += (price * contracts) / 100.0
+            cost = (price * contracts) / 100.0
+            total_cost += cost
+            
+            # Check settlement status for P/L
+            settlement = trade.get('settlement', {})
+            if isinstance(settlement, dict):
+                pnl = settlement.get('pnl', 0)
+                if pnl:
+                    total_pnl += pnl
+                    running_pnl += pnl
+            else:
+                # Assume pending/unknown settlements are -cost for now
+                running_pnl -= cost
+            
+            pnl_history.append({
+                'timestamp': trade.get('timestamp', ''),
+                'pnl': running_pnl
+            })
         
         decision_log = trade.get('decision_log', {})
         if isinstance(decision_log, dict):
@@ -237,7 +194,9 @@ def calculate_stats(trades):
         'skipped': skipped,
         'success_rate': success_rate,
         'total_cost': total_cost,
-        'avg_confidence': avg_confidence
+        'avg_confidence': avg_confidence,
+        'total_pnl': total_pnl,
+        'pnl_history': pnl_history
     }
 
 
@@ -320,12 +279,17 @@ def generate_html_report(trades):
         """
     
     # Generate HTML
+    # Prepare P/L chart data
+    pnl_labels = [p['timestamp'][:10] for p in stats['pnl_history']]
+    pnl_data = [p['pnl'] for p in stats['pnl_history']]
+    
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify Daily Trading Bot - Performance Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {{
             margin: 0;
@@ -335,7 +299,7 @@ def generate_html_report(trades):
         
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1db954 0%, #191414 100%);
+            background: #121212;
             color: #fff;
             padding: 20px;
             min-height: 100vh;
@@ -358,10 +322,7 @@ def generate_html_report(trades):
         h1 {{
             font-size: 3em;
             margin-bottom: 10px;
-            background: linear-gradient(90deg, #1db954, #1ed760);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #fff;
         }}
         
         .subtitle {{
@@ -428,26 +389,28 @@ def generate_html_report(trades):
         
         .song-card:hover {{
             border-color: #1db954;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(29, 185, 84, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(29, 185, 84, 0.2);
         }}
         
         .song-artwork {{
             position: relative;
             width: 100%;
             height: 200px;
-            background: linear-gradient(135deg, #1db954, #1ed760);
+            background: linear-gradient(135deg, #282828, #181818);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 15px;
             overflow: hidden;
+            border: 2px solid #333;
         }}
         
         .song-icon {{
             font-size: 4em;
-            opacity: 0.3;
+            opacity: 0.5;
+            color: #1db954;
         }}
         
         .success-badge {{
@@ -487,12 +450,13 @@ def generate_html_report(trades):
         }}
         
         .region-badge {{
-            background: #1db954;
-            color: #000;
+            background: rgba(29, 185, 84, 0.2);
+            color: #1db954;
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 0.85em;
             font-weight: bold;
+            border: 1px solid #1db954;
         }}
         
         .streams {{
@@ -600,6 +564,24 @@ def generate_html_report(trades):
             color: #000;
         }}
         
+        .pnl-chart-section {{
+            margin: 40px 0;
+        }}
+        
+        .chart-container {{
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid rgba(29, 185, 84, 0.2);
+            max-width: 900px;
+            margin: 0 auto;
+        }}
+        
+        #pnlChart {{
+            max-width: 100%;
+            height: 300px;
+        }}
+        
         footer {{
             text-align: center;
             padding: 30px;
@@ -642,6 +624,17 @@ def generate_html_report(trades):
                 <div class="stat-label">Avg Confidence</div>
                 <div class="stat-value">{stats['avg_confidence']:.1f}/10</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-label">Total P/L</div>
+                <div class="stat-value" style="color: {'#1db954' if stats['total_pnl'] >= 0 else '#ff4444'}">${stats['total_pnl']:.2f}</div>
+            </div>
+        </div>
+        
+        <div class="pnl-chart-section">
+            <h2 class="section-title">Profit & Loss Chart</h2>
+            <div class="chart-container">
+                <canvas id="pnlChart"></canvas>
+            </div>
         </div>
         
         <div class="songs-section">
@@ -678,6 +671,79 @@ def generate_html_report(trades):
             </p>
         </footer>
     </div>
+    
+    <script>
+        // P/L Chart
+        const ctx = document.getElementById('pnlChart');
+        if (ctx) {{
+            new Chart(ctx, {{
+                type: 'line',
+                data: {{
+                    labels: {pnl_labels},
+                    datasets: [{{
+                        label: 'Profit & Loss ($)',
+                        data: {pnl_data},
+                        borderColor: '#1db954',
+                        backgroundColor: 'rgba(29, 185, 84, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#1db954',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }}]
+                }},
+                options: {{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {{
+                        legend: {{
+                            display: true,
+                            labels: {{
+                                color: '#fff',
+                                font: {{
+                                    size: 14
+                                }}
+                            }}
+                        }},
+                        tooltip: {{
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            titleColor: '#1db954',
+                            bodyColor: '#fff',
+                            borderColor: '#1db954',
+                            borderWidth: 1
+                        }}
+                    }},
+                    scales: {{
+                        y: {{
+                            beginAtZero: true,
+                            grid: {{
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }},
+                            ticks: {{
+                                color: '#b3b3b3',
+                                callback: function(value) {{
+                                    return '$' + value.toFixed(2);
+                                }}
+                            }}
+                        }},
+                        x: {{
+                            grid: {{
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }},
+                            ticks: {{
+                                color: '#b3b3b3',
+                                maxRotation: 45,
+                                minRotation: 45
+                            }}
+                        }}
+                    }}
+                }}
+            }});
+        }}
+    </script>
 </body>
 </html>
 """

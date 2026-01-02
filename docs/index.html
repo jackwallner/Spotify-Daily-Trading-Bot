@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify Daily Trading Bot - Performance Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,7 +14,7 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1db954 0%, #191414 100%);
+            background: #121212;
             color: #fff;
             padding: 20px;
             min-height: 100vh;
@@ -36,10 +37,7 @@
         h1 {
             font-size: 3em;
             margin-bottom: 10px;
-            background: linear-gradient(90deg, #1db954, #1ed760);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #fff;
         }
         
         .subtitle {
@@ -106,26 +104,28 @@
         
         .song-card:hover {
             border-color: #1db954;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(29, 185, 84, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(29, 185, 84, 0.2);
         }
         
         .song-artwork {
             position: relative;
             width: 100%;
             height: 200px;
-            background: linear-gradient(135deg, #1db954, #1ed760);
+            background: linear-gradient(135deg, #282828, #181818);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 15px;
             overflow: hidden;
+            border: 2px solid #333;
         }
         
         .song-icon {
             font-size: 4em;
-            opacity: 0.3;
+            opacity: 0.5;
+            color: #1db954;
         }
         
         .success-badge {
@@ -165,12 +165,13 @@
         }
         
         .region-badge {
-            background: #1db954;
-            color: #000;
+            background: rgba(29, 185, 84, 0.2);
+            color: #1db954;
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 0.85em;
             font-weight: bold;
+            border: 1px solid #1db954;
         }
         
         .streams {
@@ -278,6 +279,24 @@
             color: #000;
         }
         
+        .pnl-chart-section {
+            margin: 40px 0;
+        }
+        
+        .chart-container {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid rgba(29, 185, 84, 0.2);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        #pnlChart {
+            max-width: 100%;
+            height: 300px;
+        }
+        
         footer {
             text-align: center;
             padding: 30px;
@@ -296,7 +315,7 @@
         <header>
             <h1>🎵 Spotify Daily Trading Bot</h1>
             <p class="subtitle">Powered by Kworb Chart Data & Gemini AI Analysis</p>
-            <p class="subtitle">Last Updated: January 02, 2026 at 23:19 UTC</p>
+            <p class="subtitle">Last Updated: January 02, 2026 at 23:28 UTC</p>
         </header>
         
         <div class="stats-grid">
@@ -319,6 +338,17 @@
             <div class="stat-card">
                 <div class="stat-label">Avg Confidence</div>
                 <div class="stat-value">6.5/10</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total P/L</div>
+                <div class="stat-value" style="color: #1db954">$0.00</div>
+            </div>
+        </div>
+        
+        <div class="pnl-chart-section">
+            <h2 class="section-title">Profit & Loss Chart</h2>
+            <div class="chart-container">
+                <canvas id="pnlChart"></canvas>
             </div>
         </div>
         
@@ -344,7 +374,7 @@
                 </div>
                 <div class="ai-analysis">
                     <strong>🤖 AI Analysis:</strong>
-                    <p>"The Fate of Ophelia" is predicted to hold its #1 spot due to strong current momentum and a high bot confidence, suggesting sustained listener engagement. Key factors include its current chart-topping position and impressive daily stream count, indicating widespread appeal. However, risks involve potential swift shifts in listener interest or the emergence of strong new competition, which could disrupt its dominance.</p>
+                    <p>"The Fate of Ophelia" is strongly predicted to retain its #1 spot due to its massive daily stream count and high bot confidence, suggesting sustained organic interest and a lack of immediate challengers. While current momentum is a major positive, potential risks include a sudden surge from a new major release or a coordinated bot takedown campaign, which could disrupt its chart dominance. Traders should monitor for any significant shifts in streaming volume or news of competing releases.</p>
                 </div>
             </div>
         </div>
@@ -367,7 +397,7 @@
                 </div>
                 <div class="ai-analysis">
                     <strong>🤖 AI Analysis:</strong>
-                    <p>This track is predicted to stay at #1 due to its strong current momentum, as evidenced by over 1.17 million daily streams. The high "Bot Confidence" of 7/10 suggests the algorithm sees sustained algorithmic support and engagement. However, a risk factor could be unexpected viral surges from competing tracks or a sudden drop in bot-driven engagement, which could disrupt its chart dominance.</p>
+                    <p>This track is predicted to stay #1 due to its substantial daily stream count and the healthy Bot Confidence, suggesting sustained organic popularity. The high stream volume is a primary indicator of continued listener engagement, while moderate confidence hints at a relatively stable trajectory. However, unexpected viral trends from other tracks or a sudden dip in listener interest could pose risks to its top position.</p>
                 </div>
             </div>
         </div>
@@ -390,7 +420,7 @@
                 </div>
                 <div class="ai-analysis">
                     <strong>🤖 AI Analysis:</strong>
-                    <p>**Analysis:** "The Fate of Ophelia" is currently predicted to maintain its #1 global chart position due to its strong debut performance and an expected surge in streams. While the high current position suggests significant existing momentum, the moderate bot confidence highlights potential volatility. Traders should monitor for any sudden shifts in streaming volume or negative algorithmic sentiment, as these could threaten its top spot.</p>
+                    <p>This prediction suggests "The Fate of Ophelia" is likely to retain its #1 spot primarily due to its current dominance. High daily streams, even at 91, combined with its #1 position, indicate sustained listener engagement. However, the low bot confidence (5/10) signals a significant risk, implying a fragility in this lead and a potential for rapid shifts if other tracks gain momentum or if bot activity is a major driver of its current success.</p>
                 </div>
             </div>
         </div>
@@ -413,7 +443,9 @@
                 </div>
                 <div class="ai-analysis">
                     <strong>🤖 AI Analysis:</strong>
-                    <p>This track is predicted to stay at #1 due to its already dominant chart position and a respectable daily stream count of 194. The "Bot Confidence" of 7/10 suggests a moderate likelihood of continued high performance. However, a significant risk is the relatively low daily stream count for a #1 position; a slight dip could see it quickly overtaken by tracks with higher volume.</p>
+                    <p>Here's a concise analysis for Kalshi traders:
+
+The track is predicted to remain #1 due to its strong current chart position and respectable daily stream count, suggesting sustained listener engagement. Key supporting factors include the high bot confidence score, which indicates algorithmic strength, but risks lie in the potential for sharp declines if new trending tracks emerge or current momentum falters unexpectedly.</p>
                 </div>
             </div>
         </div>
@@ -548,5 +580,78 @@
             </p>
         </footer>
     </div>
+    
+    <script>
+        // P/L Chart
+        const ctx = document.getElementById('pnlChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['2026-01-02', '2026-01-02'],
+                    datasets: [{
+                        label: 'Profit & Loss ($)',
+                        data: [0.0, 0.0],
+                        borderColor: '#1db954',
+                        backgroundColor: 'rgba(29, 185, 84, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#1db954',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#fff',
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            titleColor: '#1db954',
+                            bodyColor: '#fff',
+                            borderColor: '#1db954',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#b3b3b3',
+                                callback: function(value) {
+                                    return '$' + value.toFixed(2);
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#b3b3b3',
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
