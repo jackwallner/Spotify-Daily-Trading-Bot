@@ -25,6 +25,61 @@ from spotify_daily_intelligence import (
 MAX_TRADE_COST_CENTS = 100
 
 
+def _parse_iso_ts(ts: str) -> datetime | None:
+    if not ts or not isinstance(ts, str):
+        return None
+    try:
+        # tolerate Z suffix
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+
+def already_traded_event_today(event_ticker: str, day_utc: str) -> bool:
+    """
+    Guardrail: prevent double-trading the same Kalshi event on the same UTC day.
+
+    We treat any prior attempt (Success/Failed/Skipped) as "already traded" to
+    avoid repeat manual runs stacking trades.
+    """
+    if not event_ticker:
+        return False
+    try:
+        if not os.path.exists("trades.jsonl"):
+            return False
+        with open("trades.jsonl", "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    trade = json.loads(line)
+                except Exception:
+                    continue
+
+                ts = _parse_iso_ts(trade.get("timestamp", ""))
+                if not ts:
+                    continue
+                if ts.astimezone(timezone.utc).date().isoformat() != day_utc:
+                    continue
+
+                decision_log = trade.get("decision_log") or {}
+                if isinstance(decision_log, str):
+                    try:
+                        decision_log = json.loads(decision_log)
+                    except Exception:
+                        decision_log = {}
+                if not isinstance(decision_log, dict):
+                    decision_log = {}
+
+                if str(decision_log.get("event_ticker", "")).lower() == str(event_ticker).lower():
+                    return True
+        return False
+    except Exception:
+        # If we can't read logs, don't block trading.
+        return False
+
+
 def check_existing_positions(kalshi_client, market_ticker):
     """
     Check if we already have an open position in this market.
@@ -252,6 +307,7 @@ def main():
 
     override = os.getenv("SPOTIFY_MARKET_DATE", "").strip().lower()
     suffix = override if override else _date_suffix(datetime.now(timezone.utc))
+    today_utc = datetime.now(timezone.utc).date().isoformat()
 
     target_events = [
         {"event_ticker": f"kxspotifyd-{suffix}", "region": "US", "label": "Top US song"},
@@ -268,6 +324,16 @@ def main():
         print(f"\n[EVENT] {event_ticker} ({label})")
 
         try:
+            if already_traded_event_today(event_ticker, today_utc):
+                log_trade(
+                    event_ticker,
+                    "SKIPPED",
+                    f"Already traded this event today ({today_utc})",
+                    asset="SPOTIFY",
+                    decision_log={"reason": "already_traded_today", "event_ticker": event_ticker, "day_utc": today_utc},
+                )
+                continue
+
             # 1) Spotify signal
             signal = playlist_delta_signal(region)
             if signal.get("error"):
