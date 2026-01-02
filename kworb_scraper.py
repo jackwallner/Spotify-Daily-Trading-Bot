@@ -78,14 +78,21 @@ def scrape_kworb_chart(url: str, region: str, max_retries: int = 3) -> List[Dict
             for tr in tbody.find_all('tr'):
                 try:
                     cells = tr.find_all('td')
-                    if len(cells) < 4:
+                    if len(cells) < 7:  # Need at least 7 columns for stream data
                         continue
                     
                     # Kworb table structure:
                     # Column 0: Position (rank)
                     # Column 1: Movement indicator (+/-)
                     # Column 2: Artist-Title (format: "Artist-Title")
-                    # Column 3: Streams
+                    # Column 3: Days on chart (NOT streams!)
+                    # Column 4: Peak position
+                    # Column 5: Times peaked (x?)
+                    # Column 6: ACTUAL DAILY STREAMS (the number we want!)
+                    # Column 7: Stream change
+                    # Column 8: 7-day streams
+                    # Column 9: 7-day change
+                    # Column 10: Total streams
                     
                     # Get artist and title from column 2
                     artist_title_cell = cells[2]
@@ -105,8 +112,8 @@ def scrape_kworb_chart(url: str, region: str, max_retries: int = 3) -> List[Dict
                     if not title:
                         continue
                     
-                    # Get streams from column 3
-                    streams_cell = cells[3]
+                    # Get ACTUAL streams from column 6 (not column 3!)
+                    streams_cell = cells[6]
                     streams_text = streams_cell.get_text(strip=True)
                     streams = _parse_streams(streams_text)
                     
