@@ -24,15 +24,7 @@ HUGGING_FACE_API_KEY = os.getenv('HUGGING_FACE_API_KEY', 'REDACTED_HF_KEY')
 
 def generate_song_artwork(track_title, track_artist, predicted_success_rate, region="US"):
     """
-    Generate song artwork using Hugging Face's Stable Diffusion API.
-    
-    NOTE: As of Jan 2026, Hugging Face's free Inference API (api-inference.huggingface.co)
-    has been deprecated. Image generation now requires:
-    - Hugging Face Pro subscription ($9/month)
-    - Or using dedicated Inference Endpoints (paid)
-    - Or self-hosting the model
-    
-    For now, we'll use styled fallback icons until a free API alternative is available.
+    Generate song artwork using Hugging Face's FLUX.1-dev model.
     
     Args:
         track_title: Song title
@@ -43,14 +35,82 @@ def generate_song_artwork(track_title, track_artist, predicted_success_rate, reg
     Returns:
         Base64 encoded image data or None (fallback to styled icon)
     """
-    # Image generation currently disabled - Hugging Face free API deprecated
-    # TODO: Implement one of these alternatives:
-    # 1. Use Spotify Web API to fetch actual album art
-    # 2. Use a free image API (Unsplash, Pexels)
-    # 3. Upgrade to Hugging Face Pro for inference access
-    # 4. Host own Stable Diffusion instance
+    if not HUGGING_FACE_API_KEY:
+        print("Warning: No Hugging Face API key available")
+        return None
     
-    return None  # Use styled music icon fallback
+    # Create a prompt for album-style artwork
+    prompt = f"Professional album cover artwork for '{track_title}' by {track_artist}, modern minimalist design, bold typography, spotify aesthetic, high quality, 4k"
+    
+    # Use FLUX.1-dev as main model
+    model_id = "black-forest-labs/FLUX.1-dev"
+    api_url = f"https://api-inference.huggingface.co/models/{model_id}"
+    headers = {"Authorization": f"Bearer {HUGGING_FACE_API_KEY}"}
+    
+    try:
+        response = requests.post(api_url, headers=headers, json={"inputs": prompt}, timeout=60)
+        
+        if response.status_code == 200:
+            image_bytes = response.content
+            image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+            print(f"✓ Generated artwork for: {track_title}")
+            return image_b64
+        elif response.status_code == 503:
+            print(f"Model loading for: {track_title}")
+            return None
+        else:
+            print(f"Image generation failed ({response.status_code}): {response.text[:100]}")
+            return None
+            
+    except Exception as e:
+        print(f"Error generating image: {e}")
+        return None
+
+
+def generate_additional_artworks(track_title, track_artist, predicted_success_rate, region="US"):
+    """
+    Generate additional artwork variations using different models.
+    
+    Returns:
+        List of dicts with {'model_name': str, 'image_b64': str}
+    """
+    if not HUGGING_FACE_API_KEY:
+        return []
+    
+    prompt = f"album cover for '{track_title}' by {track_artist}, professional music artwork"
+    
+    # Additional models to try
+    models = [
+        {"id": "prompthero/openjourney", "name": "Midjourney Style"},
+        {"id": "wavymulder/Analog-Diffusion", "name": "Film Photography"},
+        {"id": "Lykon/DreamShaper", "name": "Artistic Style"}
+    ]
+    
+    artworks = []
+    headers = {"Authorization": f"Bearer {HUGGING_FACE_API_KEY}"}
+    
+    for model in models:
+        try:
+            api_url = f"https://api-inference.huggingface.co/models/{model['id']}"
+            response = requests.post(api_url, headers=headers, json={"inputs": prompt}, timeout=30)
+            
+            if response.status_code == 200:
+                image_bytes = response.content
+                image_b64 = base64.b64encode(image_bytes).decode('utf-8')
+                artworks.append({
+                    'model_name': model['name'],
+                    'image_b64': image_b64
+                })
+                print(f"  ✓ Generated {model['name']} variation")
+            elif response.status_code == 503:
+                print(f"  Model loading: {model['name']}")
+            else:
+                print(f"  Failed: {model['name']} ({response.status_code})")
+        except Exception as e:
+            print(f"  Error with {model['name']}: {e}")
+            continue
+    
+    return artworks
 
 
 def get_gemini_analysis(track_title, track_artist, confidence, streams, region):
@@ -258,17 +318,33 @@ def generate_html_report(trades):
         # Convert confidence to success rate (0-10 scale to 0-100%)
         success_rate = min(100, max(0, confidence * 10))
         
-        # Generate artwork with Hugging Face
+        # Generate main artwork with FLUX.1-dev
         artwork_b64 = generate_song_artwork(track_title, track_artist, success_rate, region)
+        
+        # Generate additional artwork variations
+        additional_artworks = generate_additional_artworks(track_title, track_artist, success_rate, region)
         
         # Get Gemini analysis
         ai_analysis = get_gemini_analysis(track_title, track_artist, confidence, streams, region)
         
-        # Create artwork HTML (image or fallback icon)
+        # Create main artwork HTML (image or fallback icon)
         if artwork_b64:
             artwork_html = f'<img src="data:image/png;base64,{artwork_b64}" alt="{track_title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">'
         else:
             artwork_html = '<div class="song-icon">🎵</div>'
+        
+        # Create additional artworks HTML
+        additional_artworks_html = ""
+        if additional_artworks:
+            additional_artworks_html = '<div class="additional-artworks"><h4>Alternative Styles</h4><div class="artwork-grid">'
+            for artwork in additional_artworks:
+                additional_artworks_html += f'''
+                <div class="artwork-variant">
+                    <img src="data:image/png;base64,{artwork['image_b64']}" alt="{artwork['model_name']}">
+                    <span class="model-label">{artwork['model_name']}</span>
+                </div>
+                '''
+            additional_artworks_html += '</div></div>'
         
         # Create song card
         song_cards_html += f"""
@@ -292,6 +368,7 @@ def generate_html_report(trades):
                     <strong>🤖 AI Analysis:</strong>
                     <p>{ai_analysis}</p>
                 </div>
+                {additional_artworks_html}
             </div>
         </div>
         """
@@ -535,6 +612,58 @@ def generate_html_report(trades):
             color: #e0e0e0;
             line-height: 1.6;
             font-size: 0.95em;
+        }}
+        
+        .additional-artworks {{
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }}
+        
+        .additional-artworks h4 {{
+            color: #b3b3b3;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }}
+        
+        .artwork-grid {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }}
+        
+        .artwork-variant {{
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }}
+        
+        .artwork-variant:hover {{
+            border-color: #1db954;
+            transform: scale(1.05);
+        }}
+        
+        .artwork-variant img {{
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }}
+        
+        .model-label {{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 5px;
+            font-size: 0.7em;
+            text-align: center;
         }}
         
         .trades-section {{
