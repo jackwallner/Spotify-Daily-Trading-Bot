@@ -194,10 +194,18 @@ Keep it concise and insightful for traders."""
 
 
 def load_trades():
-    """Load trades from trades.jsonl"""
-    trades = []
+    """
+    Load trades from trades.jsonl file.
+    
+    Returns:
+        dict with 'trades' (actual executed trades) and 'runs' (all bot runs including NO TRADE)
+    """
+    all_runs = []
+    actual_trades = []
+    
     if not os.path.exists('trades.jsonl'):
-        return trades
+        print("No trades.jsonl file found")
+        return {'trades': actual_trades, 'runs': all_runs}
     
     try:
         with open('trades.jsonl', 'r') as f:
@@ -206,19 +214,34 @@ def load_trades():
                 if not line:
                     continue
                 try:
-                    trade = json.loads(line)
-                    trades.append(trade)
+                    entry = json.loads(line)
+                    all_runs.append(entry)
+                    
+                    # Only count as actual trade if status is Success and we have an order_id
+                    status = entry.get('status', '')
+                    action = entry.get('action', '')
+                    order_id = entry.get('order_id')
+                    
+                    if status == 'Success' and order_id and 'Buy' in action:
+                        actual_trades.append(entry)
+                        
                 except json.JSONDecodeError:
                     continue
     except Exception as e:
         print(f"Error loading trades: {e}")
     
-    return trades
+    return {'trades': actual_trades, 'runs': all_runs}
 
 
-def calculate_stats(trades):
-    """Calculate trading statistics."""
-    if not trades:
+def calculate_stats(trades, runs):
+    """
+    Calculate trading statistics.
+    
+    Args:
+        trades: List of actual executed trades (Success with order_id)
+        runs: List of all bot runs (including NO TRADE, errors, etc.)
+    """
+    if not runs:
         return {
             'total_trades': 0,
             'successful': 0,
@@ -231,9 +254,11 @@ def calculate_stats(trades):
             'pnl_history': []
         }
     
-    successful = len([t for t in trades if t.get('status') == 'Success'])
-    failed = len([t for t in trades if t.get('status') == 'Failed'])
-    skipped = len([t for t in trades if 'SKIP' in t.get('status', '')])
+    # Count from all runs
+    successful_trades = len(trades)  # trades already filtered to Success with order_id
+    failed_attempts = len([r for r in runs if r.get('status') == 'Failed'])
+    no_trade = len([r for r in runs if 'NO TRADE' in r.get('action', '')])
+    errors = len([r for r in runs if r.get('action') == 'ERROR'])
     
     total_cost = 0.0
     total_pnl = 0.0
@@ -273,13 +298,15 @@ def calculate_stats(trades):
                 confidences.append(conf)
     
     avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
-    success_rate = (successful / len(trades) * 100) if trades else 0.0
+    success_rate = (successful_trades / len(runs) * 100) if runs else 0.0
     
     return {
+        'total_runs': len(runs),
         'total_trades': len(trades),
-        'successful': successful,
-        'failed': failed,
-        'skipped': skipped,
+        'successful_trades': successful_trades,
+        'failed_attempts': failed_attempts,
+        'no_trade_runs': no_trade,
+        'errors': errors,
         'success_rate': success_rate,
         'total_cost': total_cost,
         'avg_confidence': avg_confidence,
@@ -288,13 +315,18 @@ def calculate_stats(trades):
     }
 
 
-def generate_html_report(trades):
+def generate_html_report(data):
     """Generate HTML report with Spotify styling and Gemini analysis."""
     
-    stats = calculate_stats(trades)
+    trades = data['trades']
+    runs = data['runs']
+    stats = calculate_stats(trades, runs)
     
-    # Get recent trades for analysis
+    # Get recent ACTUAL trades for analysis (not NO TRADE runs)
     recent_trades = sorted(trades, key=lambda x: x.get('timestamp', ''), reverse=True)[:10]
+    
+    # Get recent runs for history table (includes NO TRADE)
+    recent_runs = sorted(runs, key=lambda x: x.get('timestamp', ''), reverse=True)[:20]
     
     # Generate song cards with Gemini analysis
     song_cards_html = ""
@@ -373,22 +405,37 @@ def generate_html_report(trades):
         </div>
         """
     
-    # Build trades table
-    trades_table_html = ""
-    for trade in recent_trades:
-        status_class = 'success' if trade.get('status') == 'Success' else 'failed' if trade.get('status') == 'Failed' else 'skipped'
-        decision_log = trade.get('decision_log', {})
+    # Build history table (showing all runs, not just trades)
+    history_table_html = ""
+    for run in recent_runs:
+        status = run.get('status', 'N/A')
+        action = run.get('action', 'N/A')
+        
+        # Determine status class
+        if status == 'Success' and run.get('order_id'):
+            status_class = 'success'
+        elif 'NO TRADE' in action or 'Could not match' in status:
+            status_class = 'skipped'
+        elif action == 'ERROR' or status == 'Failed':
+            status_class = 'failed'
+        else:
+            status_class = 'skipped'
+        
+        decision_log = run.get('decision_log', {})
         predicted = decision_log.get('predicted', {}) if isinstance(decision_log, dict) else {}
         
-        trades_table_html += f"""
+        track_title = predicted.get('title', run.get('market', 'N/A'))
+        track_artist = predicted.get('artist', 'N/A')
+        
+        history_table_html += f"""
         <tr class="{status_class}">
-            <td>{trade.get('timestamp', '')[:19]}</td>
-            <td>{predicted.get('title', trade.get('market', 'N/A'))}</td>
-            <td>{predicted.get('artist', 'N/A')}</td>
-            <td>{trade.get('action', 'N/A')}</td>
-            <td><span class="status-badge {status_class}">{trade.get('status', 'N/A')}</span></td>
-            <td>{trade.get('price', 'N/A')}¢</td>
-            <td>{trade.get('contracts', 'N/A')}</td>
+            <td>{run.get('timestamp', '')[:19]}</td>
+            <td>{track_title}</td>
+            <td>{track_artist}</td>
+            <td>{action}</td>
+            <td><span class="status-badge {status_class}">{status[:50]}</span></td>
+            <td>{run.get('price', 'N/A')}¢</td>
+            <td>{run.get('contracts', 'N/A')}</td>
         </tr>
         """
     
@@ -473,6 +520,12 @@ def generate_html_report(trades):
             color: #b3b3b3;
             text-transform: uppercase;
             letter-spacing: 1px;
+        }}
+        
+        .stat-sublabel {{
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 5px;
         }}
         
         .songs-section {{
@@ -771,28 +824,34 @@ def generate_html_report(trades):
         
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Total Trades</div>
+                <div class="stat-label">Bot Runs</div>
+                <div class="stat-value">{stats['total_runs']}</div>
+                <div class="stat-sublabel">Total executions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Actual Trades</div>
                 <div class="stat-value">{stats['total_trades']}</div>
+                <div class="stat-sublabel">Executed orders</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Successful</div>
-                <div class="stat-value">{stats['successful']}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Success Rate</div>
-                <div class="stat-value">{stats['success_rate']:.1f}%</div>
+                <div class="stat-label">No Trades</div>
+                <div class="stat-value">{stats['no_trade_runs']}</div>
+                <div class="stat-sublabel">No match/markets</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Total Cost</div>
                 <div class="stat-value">${stats['total_cost']:.2f}</div>
+                <div class="stat-sublabel">Contracts purchased</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Avg Confidence</div>
                 <div class="stat-value">{stats['avg_confidence']:.1f}/10</div>
+                <div class="stat-sublabel">Prediction strength</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Total P/L</div>
                 <div class="stat-value" style="color: {'#1db954' if stats['total_pnl'] >= 0 else '#ff4444'}">${stats['total_pnl']:.2f}</div>
+                <div class="stat-sublabel">Profit & Loss</div>
             </div>
         </div>
         
@@ -811,7 +870,8 @@ def generate_html_report(trades):
         </div>
         
         <div class="trades-section">
-            <h2 class="section-title">Trade History</h2>
+            <h2 class="section-title">Bot Run History</h2>
+            <p style="color: #b3b3b3; margin-bottom: 20px;">Shows all bot executions including successful trades, failed attempts, and no-trade runs</p>
             <table>
                 <thead>
                     <tr>
@@ -825,7 +885,7 @@ def generate_html_report(trades):
                     </tr>
                 </thead>
                 <tbody>
-                    {trades_table_html}
+                    {history_table_html}
                 </tbody>
             </table>
         </div>
@@ -919,14 +979,14 @@ def generate_html_report(trades):
 
 def main():
     """Generate and save the HTML report."""
-    print("Generating Spotify Trading Bot Report...")
+    print("\nGenerating Spotify Trading Bot Report...")
     
-    # Load trades
-    trades = load_trades()
-    print(f"Loaded {len(trades)} trades")
+    # Load trades and runs
+    data = load_trades()
+    print(f"Loaded {len(data['trades'])} actual trades from {len(data['runs'])} total runs")
     
     # Generate HTML report
-    html = generate_html_report(trades)
+    html = generate_html_report(data)
     
     # Ensure docs directory exists
     Path('docs').mkdir(exist_ok=True)
