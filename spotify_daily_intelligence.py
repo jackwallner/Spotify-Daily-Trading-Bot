@@ -389,12 +389,16 @@ CONFIDENCE: [1-10]
 REASONING: [1-2 sentences]
 """
 
+    # Fallback models in order of rate limits (RPM):
+    # gemini-2.5-flash-lite (7 RPM), gemini-2.5-flash (3 RPM),
+    # gemma-3-27b (4 RPM), gemma-3-4b (2 RPM), gemma-3-12b (1 RPM), gemma-3-1b
     models = [
         "gemini-2.5-flash-lite",
         "gemini-2.5-flash",
-        "gemini-2.0-flash-lite",
         "gemma-3-27b-it",
+        "gemma-3-4b-it",
         "gemma-3-12b-it",
+        "gemma-3-1b-it"
     ]
 
     for model in models:
