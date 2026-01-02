@@ -9,15 +9,17 @@ Kalshi markets. Market selection is centralized in `spotify_daily_markets.py`.
 import os
 import json
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from kalshi_auth import initialize_kalshi_client
 
-from spotify_daily_markets import SpotifyDailyMarketConfig, discover_spotify_daily_markets
 from spotify_daily_intelligence import (
-    SpotifyDecisionThresholds,
-    get_spotify_daily_gemini_decision,
-    get_spotify_daily_signals,
+    get_market_prices,
+    playlist_delta_signal,
+    select_market_for_track,
 )
+
+# NOTE: We keep the generic discovery module in-repo for future expansion, but
+# this bot run is hard-targeted to the two configured Jan 2, 2026 events.
 
 # Maximum cost per trade in cents ($1 = 100 cents)
 MAX_TRADE_COST_CENTS = 100
@@ -113,20 +115,6 @@ def log_trade(market_ticker, action, status, asset=None, sentiment=None, price=N
 
 
 # initialize_kalshi_client is now imported from kalshi_auth module
-
-
-
-
-def fetch_spotify_daily_markets(client, cfg: SpotifyDailyMarketConfig):
-    """Discover Spotify daily markets using shared selection rules."""
-    try:
-        return discover_spotify_daily_markets(client, cfg, status="open")
-    except Exception as e:
-        print(f"Error discovering Spotify daily markets: {e}")
-        return []
-
-
-# select_optimal_market is no longer needed - we use closest to BRTI/ERTI from find_next_hour_markets
 
 
 def place_trade(kalshi_client, market, side: str, limit_price: int, contract_count: int):
@@ -225,219 +213,126 @@ def place_trade(kalshi_client, market, side: str, limit_price: int, contract_cou
 
 def main():
     """
-    Main trading loop - Two-phase execution for optimal latency
-    
-    PHASE 1: Model Tuning (SLOW - can take 2-5s)
-    - Gemini analyzes recent performance
-    - Adjusts model parameters
-    - Saves tuned config
-    
-    PHASE 2: Fast Execution (FAST - target <500ms)
-    - Fetch price from Binance (10-50ms)
-    - Run model with pre-tuned params (no AI calls)
-    - Execute immediately if edge criteria met
+    Main trading loop (simplified).
+
+    Target exactly two Spotify daily Kalshi events (Jan 2, 2026):
+    - kxspotifyd-26jan02        (Top US song)
+    - kxspotifyglobald-26jan02  (Top Global song)
+
+    Signal:
+    - Query Spotify Top 50 playlists (US + Global).
+    - Compare #1 vs #2 popularity proxy.
+    - Pick predicted winner, then find matching Kalshi contract under the event and buy YES.
     """
     print(f"Starting trading bot at {datetime.utcnow().isoformat()}")
-    
-    # ============= CHECK FOR FINALIZED TRADES WITH P&L DATA =============
+
     print("\n" + "="*70)
-    print("[FINALIZED RESULTS CHECK] Checking trades for finalized p&l data")
-    print("="*70)
-    
-    try:
-        from kalshi_order_history import enrich_trades_with_market_outcomes
-        import json
-        
-        # Load trades from trades.jsonl (dicts, not SDK objects)
-        trades = []
-        if os.path.exists('trades.jsonl'):
-            with open('trades.jsonl', 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        try:
-                            trades.append(json.loads(line))
-                        except:
-                            pass
-        
-        if trades:
-            # Filter for executed trades (have order_id) with unknown result
-            unknown_trades = [t for t in trades if t.get('order_id') and t.get('settlement', {}).get('status') not in ['Won', 'Lost']]
-            
-            if unknown_trades:
-                print(f"\nFound {len(unknown_trades)} executed trades pending settlement. Checking for finalized data...")
-                
-                # Enrich with market outcomes
-                enriched, count = enrich_trades_with_market_outcomes(unknown_trades)
-                
-                if count > 0:
-                    print(f" ✓ Updated {count} trades with finalized outcomes")
-                    
-                    # Merge enriched trades back
-                    enriched_markets = {t.get('market'): t for t in enriched if t.get('market')}
-                    for i, trade in enumerate(trades):
-                        market = trade.get('market')
-                        if market in enriched_markets:
-                            trades[i] = enriched_markets[market]
-                    
-                    # Save back to file
-                    with open('trades.jsonl', 'w') as f:
-                        for trade in trades:
-                            f.write(json.dumps(trade) + '\n')
-                    print(f" ✓ Saved updated trade data to trades.jsonl")
-            else:
-                print(" ✓ All trades have known settlement status")
-        else:
-            print(" No trade history found")
-    except ImportError:
-        print(" ⚠ Could not import order history functions")
-    except Exception as e:
-        print(f" ⚠ Error checking finalized results: {e}")
-    
-    # ============= PHASE 1: ANALYZE (No Auto-Tuning) =============
-    # Gemini analyzes performance and logs insights
-    # Model factors stay fixed - YOU control model_config.json manually
-    model_config = None
-    try:
-        from model_tuner import run_analysis
-        model_config = run_analysis()
-        print(f"[PHASE 1 COMPLETE] Analysis logged, using fixed model config")
-    except ImportError:
-        print("[PHASE 1] Model analyzer not available")
-    except Exception as e:
-        print(f"[PHASE 1] Analysis failed: {e}")
-    
-    # ============= PHASE 2: FAST EXECUTION =============
-    # No Gemini calls from here - pure mechanical execution
-    print("\n" + "="*70)
-    print("[PHASE 2: FAST EXECUTION] Starting fast execution phase")
+    print("[SPOTIFY DAILY] Starting execution")
     print("="*70)
     
     # Initialize Kalshi client
     kalshi_client = initialize_kalshi_client()
-    
-    cfg = SpotifyDailyMarketConfig.from_env()
-    thresholds = SpotifyDecisionThresholds()
 
     try:
-        max_markets = int(os.getenv("SPOTIFY_DAILY_MAX_MARKETS_PER_RUN", "3"))
+        buffer_cents = int(os.getenv("LIMIT_PRICE_BUFFER_CENTS", "2"))
     except Exception:
-        max_markets = 3
-    max_markets = max(1, max_markets)
+        buffer_cents = 2
+    buffer_cents = max(0, buffer_cents)
 
-    markets = fetch_spotify_daily_markets(kalshi_client, cfg)
-    if not markets:
-        print("No Spotify daily markets found (check SPOTIFY_MARKET_* env vars).")
-        log_trade("SPOTIFY-DAILY-MARKET-NOT-FOUND", "NO TRADE", "Market Not Found", asset="SPOTIFY")
-        print(f"Trading bot completed at {datetime.utcnow().isoformat()}")
-        return
+    target_events = [
+        {"event_ticker": "kxspotifyd-26jan02", "region": "US", "label": "Top US song"},
+        {"event_ticker": "kxspotifyglobald-26jan02", "region": "Global", "label": "Top Global song"},
+    ]
 
-    markets = markets[:max_markets]
-    trades_made = []
+    trades_made: list[dict] = []
 
-    for market in markets:
-        ticker = getattr(market, "ticker", "")
-        title = getattr(market, "title", "")
-        print(f"\n[SPOTIFY DAILY] {ticker}")
-        if title:
-            print(f"Title: {title}")
+    for ev in target_events:
+        event_ticker = ev["event_ticker"]
+        region = ev["region"]
+        label = ev["label"]
+
+        print(f"\n[EVENT] {event_ticker} ({label})")
 
         try:
-            signals = get_spotify_daily_signals(kalshi_client, market, thresholds=thresholds)
-            gemini = get_spotify_daily_gemini_decision(signals)
-
-            decision = (gemini.get("decision") if gemini else signals.get("recommendation")) or "SKIP"
-            decision = str(decision).upper()
-
-            framework = signals.get("framework", "spotify_daily_v1")
-            prices = signals.get("prices", {}) or {}
-            composite = signals.get("composite_score", 50)
-
-            print(f"[SIGNALS] Composite {composite:.1f}/100 | Model {signals.get('recommendation')} | Spread {signals.get('market_wisdom', {}).get('spread')}c")
-            if gemini:
-                print(f"[GEMINI] {gemini.get('model')}: {decision} ({gemini.get('confidence')}/10)")
-
-            if decision not in ("BUY_YES", "BUY_NO"):
-                log_trade(
-                    ticker,
-                    "NO TRADE",
-                    f"Decision: {decision}",
-                    asset="SPOTIFY",
-                    decision_log={
-                        "framework": framework,
-                        "decision": decision,
-                        "model_recommendation": signals.get("recommendation"),
-                        "model_reason": signals.get("reason"),
-                        "model_confidence": signals.get("confidence"),
-                        "gemini": gemini,
-                        "composite_score": composite,
-                        "prices": prices,
-                    },
-                )
+            # 1) Spotify signal
+            signal = playlist_delta_signal(region)
+            if signal.get("error"):
+                log_trade(event_ticker, "ERROR", f"Signal error: {signal['error']}", asset="SPOTIFY", decision_log=signal)
                 continue
 
-            side = "yes" if decision == "BUY_YES" else "no"
-            ask = prices.get("yes_ask") if side == "yes" else prices.get("no_ask")
-            try:
-                buffer_cents = int(os.getenv("LIMIT_PRICE_BUFFER_CENTS", "2"))
-            except Exception:
-                buffer_cents = 2
-            limit_price = min(99, max(1, int(ask or 50) + max(0, buffer_cents)))
+            predicted = signal["predicted"]
+            track_title = predicted.get("title", "")
+            track_artist = predicted.get("artist", "")
 
-            position_check = check_existing_positions(kalshi_client, ticker)
-            if position_check.get("has_position"):
-                existing_side = position_check.get("side")
-                existing_contracts = position_check.get("contracts", 0)
-                if existing_side and existing_side != side:
-                    log_trade(
-                        ticker,
-                        "SKIPPED",
-                        f"Conflict: Own {existing_contracts} {existing_side.upper()}, signal wants {side.upper()}",
-                        asset="SPOTIFY",
-                        decision_log={
-                            "reason": "position_conflict",
-                            "existing_side": existing_side,
-                            "existing_contracts": existing_contracts,
-                            "signal_side": side,
-                        },
-                    )
+            print(f"[SPOTIFY] Predicted #1 ({region}): {track_title} — {track_artist}")
+            print(f"[SPOTIFY] Rationale: {signal.get('rationale')} | popΔ={signal.get('pop_delta')} (thresh={signal.get('pop_delta_threshold')})")
+
+            # 2) Fetch Kalshi markets for the event
+            markets_resp = kalshi_client.get_markets(event_ticker=event_ticker, status="open", limit=200)
+            markets = getattr(markets_resp, "markets", None) or []
+            if not markets:
+                log_trade(event_ticker, "NO TRADE", "No open markets found for event", asset="SPOTIFY", decision_log=signal)
+                continue
+
+            # 3) Pick the contract market for the predicted track
+            chosen_market = select_market_for_track(markets, track_title=track_title, track_artist=track_artist)
+            if not chosen_market:
+                # If event only has one market, fall back to it.
+                if len(markets) == 1:
+                    chosen_market = markets[0]
+                else:
+                    log_trade(event_ticker, "NO TRADE", "Could not match track to a market contract", asset="SPOTIFY", decision_log={
+                        **signal,
+                        "candidate_count": len(markets),
+                    })
                     continue
 
-            trade_result = place_trade(kalshi_client, market, side=side, limit_price=limit_price, contract_count=1)
-            status = trade_result.get("status", "Failed")
-            exec_price = trade_result.get("price")
-            exec_contracts = trade_result.get("contracts")
-            order_id = trade_result.get("order_id")
+            ticker = getattr(chosen_market, "ticker", "")
+            m_title = getattr(chosen_market, "title", "")
+            print(f"[KALSHI] Selected contract: {ticker}")
+            if m_title:
+                print(f"[KALSHI] Title: {m_title}")
 
-            action = f"Buy {side.upper()} ({framework})"
+            # 4) Entry price + position checks
+            prices = get_market_prices(kalshi_client, ticker)
+            yes_ask = prices.get("yes_ask", 50)
+            limit_price = min(99, max(1, int(yes_ask) + buffer_cents))
+
+            position_check = check_existing_positions(kalshi_client, ticker)
+            if position_check.get("has_position") and position_check.get("side") == "no":
+                log_trade(ticker, "SKIPPED", "Conflict: already hold NO", asset="SPOTIFY", decision_log={"reason": "position_conflict"})
+                continue
+
+            # 5) Trade: BUY YES
+            trade_result = place_trade(kalshi_client, chosen_market, side="yes", limit_price=limit_price, contract_count=1)
+            status = trade_result.get("status", "Failed")
+
+            action = f"Buy YES (spotify_playlist_delta_v1)"
+            decision_log = {
+                **signal,
+                "event_ticker": event_ticker,
+                "region": region,
+                "selected_market": ticker,
+                "selected_market_title": m_title,
+                "prices": prices,
+                "limit_price": limit_price,
+                "order_id": trade_result.get("order_id"),
+            }
+
             log_trade(
                 ticker,
                 action,
                 status,
                 asset="SPOTIFY",
-                price=exec_price,
-                contracts=exec_contracts,
-                decision_log={
-                    "framework": framework,
-                    "decision": decision,
-                    "model_recommendation": signals.get("recommendation"),
-                    "model_reason": signals.get("reason"),
-                    "model_confidence": signals.get("confidence"),
-                    "gemini": gemini,
-                    "composite_score": composite,
-                    "prices": prices,
-                    "limit_price": limit_price,
-                    "execution_price": exec_price,
-                    "execution_contracts": exec_contracts,
-                    "order_id": order_id,
-                },
+                price=trade_result.get("price"),
+                contracts=trade_result.get("contracts"),
+                decision_log=decision_log,
             )
 
             if status == "Success":
-                trades_made.append({"ticker": ticker, "action": action, "price": exec_price, "contracts": exec_contracts})
-
+                trades_made.append({"ticker": ticker, "action": action, "price": trade_result.get("price"), "contracts": trade_result.get("contracts")})
         except Exception as e:
-            log_trade(ticker, "ERROR", f"Signal/trade failed: {e}", asset="SPOTIFY")
+            log_trade(event_ticker, "ERROR", f"Event failed: {e}", asset="SPOTIFY")
 
     print(f"\n{'='*70}")
     print(f"[SUMMARY] Spotify daily run completed - Trades made: {len(trades_made)}")

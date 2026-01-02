@@ -2,13 +2,15 @@
 """
 Spotify Daily Market Intelligence.
 
-This module is intentionally *market-structure agnostic*:
-- No BTC/ETH assumptions
-- No strike-price parsing from tickers
-- Uses Kalshi market microstructure signals (orderbook, trades, time-to-close)
+Core idea (simplified):
+- Use Spotify "Top 50" chart playlists as an easy-to-track signal.
+- Decide whether the current #1 is safe, or if #2 is likely to flip.
+- Map the predicted #1 track to the matching Kalshi market contract and buy YES.
 
-It is designed to work on Spotify-themed daily markets selected via
-`spotify_daily_markets.discover_spotify_daily_markets`.
+Data sources:
+- Spotify playlists (via `spotipy`) for rank + popularity proxy
+  - Global Top 50: 37i9dQZEVXbMDoHDwVN2tF
+  - USA Top 50:    37i9dQZEVXbLRQDuF5jeBp
 """
 
 from __future__ import annotations
@@ -17,9 +19,11 @@ import os
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 
 from spotify_daily_markets import get_market_close_ts
 
@@ -41,6 +45,144 @@ class SpotifyDecisionThresholds:
     buy_no: float = 40.0
     skip_zone_low: float = 45.0
     skip_zone_high: float = 55.0
+
+
+GLOBAL_TOP_50_PLAYLIST_ID = "37i9dQZEVXbMDoHDwVN2tF"
+US_TOP_50_PLAYLIST_ID = "37i9dQZEVXbLRQDuF5jeBp"
+
+
+def _normalize_text(s: str) -> str:
+    return "".join(ch.lower() for ch in (s or "") if ch.isalnum() or ch.isspace()).strip()
+
+
+def _spotify_client() -> spotipy.Spotify:
+    client_id = os.getenv("SPOTIFY_CLIENT_ID")
+    client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+    if not client_id or not client_secret:
+        raise RuntimeError("Missing SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET")
+    auth = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
+    return spotipy.Spotify(auth_manager=auth, requests_timeout=15, retries=3)
+
+
+def get_chart_snapshot(playlist_id: str, region: str) -> List[Dict[str, Any]]:
+    """
+    Returns list of track dicts for current playlist ordering.
+    Note: Spotify API doesn't expose raw streams here; we use rank + popularity proxy.
+    """
+    sp = _spotify_client()
+    results = sp.playlist_items(playlist_id, additional_types=("track",), limit=50)
+    items = results.get("items", []) or []
+    rows: List[Dict[str, Any]] = []
+
+    for idx, item in enumerate(items):
+        track = (item or {}).get("track") or {}
+        if not track:
+            continue
+        artists = track.get("artists") or []
+        artist_name = (artists[0].get("name") if artists else "") or ""
+        title = track.get("name") or ""
+        rows.append(
+            {
+                "rank": idx + 1,
+                "artist": artist_name,
+                "title": title,
+                "popularity": int(track.get("popularity") or 0),
+                "track_id": track.get("id"),
+                "region": region,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+
+    return rows
+
+
+def playlist_delta_signal(region: str) -> Dict[str, Any]:
+    """
+    Simple signal:
+    - incumbent = current #1
+    - challenger = current #2
+    - if challenger popularity > incumbent popularity by threshold => pick challenger
+    """
+    playlist_id = GLOBAL_TOP_50_PLAYLIST_ID if region.lower() == "global" else US_TOP_50_PLAYLIST_ID
+    rows = get_chart_snapshot(playlist_id, region)
+    if len(rows) < 2:
+        return {"error": "insufficient_playlist_data", "region": region}
+
+    top1 = rows[0]
+    top2 = rows[1]
+
+    try:
+        pop_delta_threshold = int(os.getenv("SPOTIFY_POP_DELTA_THRESHOLD", "3"))
+    except Exception:
+        pop_delta_threshold = 3
+
+    pop1 = int(top1.get("popularity") or 0)
+    pop2 = int(top2.get("popularity") or 0)
+    pop_delta = pop2 - pop1
+
+    predicted = top1
+    rationale = "Incumbent #1 favored (rank signal)"
+    confidence = 6
+
+    if pop_delta >= pop_delta_threshold:
+        predicted = top2
+        rationale = f"#2 popularity momentum (+{pop_delta}) suggests possible flip"
+        confidence = 5
+    elif pop_delta > 0:
+        rationale = f"#2 popularity slightly higher (+{pop_delta}); still favor #1 but volatile"
+        confidence = 5
+    else:
+        confidence = 7
+
+    return {
+        "region": region,
+        "playlist_id": playlist_id,
+        "top1": top1,
+        "top2": top2,
+        "pop_delta": pop_delta,
+        "pop_delta_threshold": pop_delta_threshold,
+        "predicted": predicted,
+        "confidence": confidence,
+        "rationale": rationale,
+        "framework": "spotify_playlist_delta_v1",
+    }
+
+
+def select_market_for_track(markets: List[Any], track_title: str, track_artist: str) -> Optional[Any]:
+    """
+    Best-effort matching between Spotify track and Kalshi market contract.
+    We prefer matching on title, then artist.
+    """
+    t_title = _normalize_text(track_title)
+    t_artist = _normalize_text(track_artist)
+    if not t_title and not t_artist:
+        return None
+
+    best = None
+    best_score = -1
+
+    for m in markets or []:
+        title = _normalize_text(str(getattr(m, "title", "") or ""))
+        ticker = _normalize_text(str(getattr(m, "ticker", "") or ""))
+        blob = f"{title} {ticker}".strip()
+        score = 0
+        if t_title and t_title in blob:
+            score += 10
+        if t_artist and t_artist in blob:
+            score += 5
+        # partial: if any word from title present
+        if score == 0 and t_title:
+            for w in t_title.split():
+                if len(w) >= 4 and w in blob:
+                    score += 1
+
+        if score > best_score:
+            best_score = score
+            best = m
+
+    if best_score <= 0:
+        return None
+    return best
 
 
 def get_market_prices(client, ticker: str) -> Dict[str, int]:
@@ -233,7 +375,7 @@ def get_spotify_daily_signals(
         "recommendation": decision,
         "reason": reason,
         "confidence": confidence,
-        "framework": "spotify_daily_v1",
+        "framework": "spotify_microstructure_v1",
     }
 
 
