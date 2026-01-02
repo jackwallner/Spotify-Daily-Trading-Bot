@@ -101,7 +101,8 @@ def playlist_delta_signal(region: str) -> Dict[str, Any]:
     Simple signal:
     - incumbent = current #1
     - challenger = current #2
-    - if challenger popularity > incumbent popularity by threshold => pick challenger
+    - ALWAYS pick the incumbent (#1). We still compute popularity deltas to log
+      "volatility" (how close a flip might be).
     """
     playlist_id = GLOBAL_TOP_50_PLAYLIST_ID if region.lower() == "global" else US_TOP_50_PLAYLIST_ID
     rows = get_chart_snapshot(playlist_id, region)
@@ -121,16 +122,15 @@ def playlist_delta_signal(region: str) -> Dict[str, Any]:
     pop_delta = pop2 - pop1
 
     predicted = top1
-    rationale = "Incumbent #1 favored (rank signal)"
-    confidence = 6
+    rationale = "Always pick current #1 (rank signal)"
 
+    # Confidence is lower when #2 is gaining on #1 (higher popularity).
     if pop_delta >= pop_delta_threshold:
-        predicted = top2
-        rationale = f"#2 popularity momentum (+{pop_delta}) suggests possible flip"
         confidence = 5
+        rationale += f"; WARNING: #2 popularity momentum (+{pop_delta}) suggests possible flip"
     elif pop_delta > 0:
-        rationale = f"#2 popularity slightly higher (+{pop_delta}); still favor #1 but volatile"
-        confidence = 5
+        confidence = 6
+        rationale += f"; note: #2 popularity slightly higher (+{pop_delta})"
     else:
         confidence = 7
 

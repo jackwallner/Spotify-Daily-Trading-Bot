@@ -215,9 +215,12 @@ def main():
     """
     Main trading loop (simplified).
 
-    Target exactly two Spotify daily Kalshi events (Jan 2, 2026):
-    - kxspotifyd-26jan02        (Top US song)
-    - kxspotifyglobald-26jan02  (Top Global song)
+    Target exactly two Spotify daily Kalshi events for the current UTC date:
+    - kxspotifyd-YYmonDD        (Top US song)
+    - kxspotifyglobald-YYmonDD  (Top Global song)
+
+    Override (optional):
+    - SPOTIFY_MARKET_DATE=26jan02  # forces YYmonDD instead of today's UTC date
 
     Signal:
     - Query Spotify Top 50 playlists (US + Global).
@@ -239,9 +242,20 @@ def main():
         buffer_cents = 2
     buffer_cents = max(0, buffer_cents)
 
+    def _date_suffix(dt: datetime) -> str:
+        # Format: 26jan02
+        months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+        yy = f"{dt.year % 100:02d}"
+        mon = months[dt.month - 1]
+        dd = f"{dt.day:02d}"
+        return f"{yy}{mon}{dd}"
+
+    override = os.getenv("SPOTIFY_MARKET_DATE", "").strip().lower()
+    suffix = override if override else _date_suffix(datetime.now(timezone.utc))
+
     target_events = [
-        {"event_ticker": "kxspotifyd-26jan02", "region": "US", "label": "Top US song"},
-        {"event_ticker": "kxspotifyglobald-26jan02", "region": "Global", "label": "Top Global song"},
+        {"event_ticker": f"kxspotifyd-{suffix}", "region": "US", "label": "Top US song"},
+        {"event_ticker": f"kxspotifyglobald-{suffix}", "region": "Global", "label": "Top Global song"},
     ]
 
     trades_made: list[dict] = []
