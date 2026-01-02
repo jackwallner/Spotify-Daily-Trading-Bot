@@ -3,11 +3,16 @@
 kalshi_private_key.pem
 *.pem
 
-# Logs
-# Never commit runtime artifacts / trade history
+# Logs / runtime artifacts
+#
+# This repo DOES publish *this bot's* trade history (fresh, Spotify-only):
+# - `trades.log` (legacy CSV-ish)
+# - `trades.jsonl` (preferred)
+#
+# But we still ignore other runtime artifacts.
 *.log
-trades.log
-trades.jsonl
+!trades.log
+!trades.jsonl
 positions_cache.json
 ai_insights.jsonl
 

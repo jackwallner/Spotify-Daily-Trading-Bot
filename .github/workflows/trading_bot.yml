@@ -23,14 +23,10 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Restore trades.log if exists
+      - name: Restore trade logs if exists
         run: |
-          if [ -f trades.log ]; then
-            echo "trades.log exists from previous run"
-          else
-            touch trades.log
-            echo "Created new trades.log"
-          fi
+          if [ -f trades.log ]; then echo "trades.log exists"; else touch trades.log; echo "Created trades.log"; fi
+          if [ -f trades.jsonl ]; then echo "trades.jsonl exists"; else touch trades.jsonl; echo "Created trades.jsonl"; fi
 
       - name: Set up Python
         uses: actions/setup-python@v4
