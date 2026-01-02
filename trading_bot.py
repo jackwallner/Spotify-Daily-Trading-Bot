@@ -2,8 +2,11 @@
 """
 Kalshi Trading Bot - Spotify Daily Markets
 
-This project is repurposed to focus on discovering and trading Spotify daily
-Kalshi markets. Market selection is centralized in `spotify_daily_markets.py`.
+This bot trades Spotify daily Kalshi markets using chart data from Kworb (kworb.net).
+No Spotify API credentials required - Kworb provides real-time chart positions and stream counts.
+
+Market selection is centralized in `spotify_daily_markets.py`.
+Signal generation uses Kworb data in `spotify_daily_intelligence.py`.
 """
 
 import os
@@ -278,9 +281,9 @@ def main():
     - SPOTIFY_MARKET_DATE=26jan02  # forces YYmonDD instead of today's UTC date
 
     Signal:
-    - Query Spotify Top 50 playlists (US + Global).
-    - Compare #1 vs #2 popularity proxy.
-    - Pick predicted winner, then find matching Kalshi contract under the event and buy YES.
+    - Query Kworb for Spotify daily charts (US + Global).
+    - Compare #1 vs #2 stream counts.
+    - Pick predicted winner (always #1), then find matching Kalshi contract and buy YES.
     """
     print(f"Starting trading bot at {datetime.utcnow().isoformat()}")
 
