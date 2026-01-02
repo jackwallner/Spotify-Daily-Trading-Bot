@@ -42,9 +42,12 @@ def already_traded_event_today(event_ticker: str, day_utc: str) -> bool:
     """
     Guardrail: prevent double-trading the same Kalshi event on the same UTC day.
 
-    We treat any prior attempt (Success/Failed/Skipped) as "already traded" to
-    avoid repeat manual runs stacking trades.
+    DISABLED: This check is bypassed to allow multiple trade attempts.
+    Useful when previous "Success" logs didn't actually execute on Kalshi.
     """
+    # DISABLED - always return False to allow repeated trading
+    return False
+    
     if not event_ticker:
         return False
     try:
@@ -76,11 +79,15 @@ def already_traded_event_today(event_ticker: str, day_utc: str) -> bool:
                     decision_log = {}
 
                 if str(decision_log.get("event_ticker", "")).lower() == str(event_ticker).lower():
-                    return True
+                    # DISABLED: Allow repeated trading
+                    pass  # return True
         return False
     except Exception:
         # If we can't read logs, don't block trading.
         return False
+    
+    # NOTE: This function now always returns False (disabled duplicate trade check)
+    # to allow multiple trade attempts when previous "Success" didn't execute
 
 
 def check_existing_positions(kalshi_client, market_ticker):
@@ -376,15 +383,16 @@ def main():
             if m_title:
                 print(f"[KALSHI] Title: {m_title}")
 
-            # 4) Entry price + position checks
+            # 4) Entry price (position checks disabled - will always attempt trade)
             prices = get_market_prices(kalshi_client, ticker)
             yes_ask = prices.get("yes_ask", 50)
             limit_price = min(99, max(1, int(yes_ask) + buffer_cents))
 
-            position_check = check_existing_positions(kalshi_client, ticker)
-            if position_check.get("has_position") and position_check.get("side") == "no":
-                log_trade(ticker, "SKIPPED", "Conflict: already hold NO", asset="SPOTIFY", decision_log={"reason": "position_conflict"})
-                continue
+            # Position check DISABLED - allow multiple trades per market
+            # position_check = check_existing_positions(kalshi_client, ticker)
+            # if position_check.get("has_position") and position_check.get("side") == "no":
+            #     log_trade(ticker, "SKIPPED", "Conflict: already hold NO", asset="SPOTIFY", decision_log={"reason": "position_conflict"})
+            #     continue
 
             # 5) Trade: BUY YES
             trade_result = place_trade(kalshi_client, chosen_market, side="yes", limit_price=limit_price, contract_count=1)
