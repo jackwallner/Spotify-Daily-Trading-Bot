@@ -657,13 +657,16 @@ CONFIDENCE: [1-10] (10 = extremely confident)
 REASONING: [1-2 sentences explaining your decision]
 """
         
-        # Model fallback list
+        # Model fallback list ordered by rate limits (RPM):
+        # gemini-2.5-flash-lite (7 RPM), gemini-2.5-flash (3 RPM),
+        # gemma-3-27b (4 RPM), gemma-3-4b (2 RPM), gemma-3-12b (1 RPM), gemma-3-1b
         models = [
-            'gemini-2.5-flash-lite',
-            'gemini-2.5-flash', 
-            'gemini-2.0-flash-lite',
-            'gemma-3-27b-it',
-            'gemma-3-12b-it',
+            'gemini-2.5-flash-lite',  # 7 RPM
+            'gemini-2.5-flash',       # 3 RPM
+            'gemma-3-27b-it',         # 4 RPM
+            'gemma-3-4b-it',          # 2 RPM
+            'gemma-3-12b-it',         # 1 RPM
+            'gemma-3-1b-it',          # Last resort
         ]
         
         for model_idx, model in enumerate(models, 1):
@@ -856,15 +859,16 @@ CONFIDENCE: [1-10]
 REASONING: [Your explanation]
 """
         
-        # Model fallback list (same as kalshi_analysis.py)
+        # Model fallback list ordered by rate limits (RPM):
+        # gemini-2.5-flash-lite (7 RPM), gemini-2.5-flash (3 RPM),
+        # gemma-3-27b (4 RPM), gemma-3-4b (2 RPM), gemma-3-12b (1 RPM), gemma-3-1b
         models = [
-            'gemini-2.5-flash-lite',
-            'gemini-2.5-flash',
-            'gemini-2.0-flash-lite',
-            'gemma-3-27b-it',
-            'gemma-3-12b-it',
-            'gemma-3-4b-it',
-            'gemma-3-1b-it',
+            'gemini-2.5-flash-lite',  # 7 RPM
+            'gemini-2.5-flash',       # 3 RPM
+            'gemma-3-27b-it',         # 4 RPM
+            'gemma-3-4b-it',          # 2 RPM
+            'gemma-3-12b-it',         # 1 RPM
+            'gemma-3-1b-it',          # Last resort
         ]
         
         for model_idx, model in enumerate(models, 1):

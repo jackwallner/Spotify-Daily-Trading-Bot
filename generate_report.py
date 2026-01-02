@@ -133,7 +133,17 @@ Provide a brief 2-3 sentence analysis explaining:
 
 Keep it concise and insightful for traders."""
 
-    models = ['gemini-2.0-flash-lite', 'gemini-exp-1206', 'gemini-1.5-flash-002']
+    # Fallback models in order of rate limits (RPM):
+    # gemini-2.5-flash-lite (7 RPM), gemini-2.5-flash (3 RPM),
+    # gemma-3-27b (4 RPM), gemma-3-4b (2 RPM), gemma-3-12b (1 RPM), gemma-3-1b
+    models = [
+        'gemini-2.5-flash-lite',
+        'gemini-2.5-flash',
+        'gemma-3-27b-it',
+        'gemma-3-4b-it',
+        'gemma-3-12b-it',
+        'gemma-3-1b-it'
+    ]
     
     for model in models:
         try:
