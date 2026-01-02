@@ -2,8 +2,8 @@ name: Spotify Daily Markets Bot
 
 on:
   schedule:
-    # Daily run (UTC). Chosen to be after typical Spotify chart/playlist updates
-    # and before markets get too close to close.
+    # Run every day at 4 PM UTC (11 AM EST / 8 AM PST)
+    # After Spotify charts update, before markets close
     - cron: '0 16 * * *'
   workflow_dispatch:
 
