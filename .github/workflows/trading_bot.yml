@@ -49,11 +49,13 @@ jobs:
           KALSHI_API_KEY_ID: ${{ secrets.KALSHI_API_KEY_ID }}
           KALSHI_PRIVATE_KEY: ${{ secrets.KALSHI_PRIVATE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          HUGGING_FACE_API_KEY: ${{ secrets.HUGGING_FACE_API_KEY }}
         run: |
           cat > .env << 'EOF'
           KALSHI_API_KEY_ID=$KALSHI_API_KEY_ID
           KALSHI_PRIVATE_KEY=$KALSHI_PRIVATE_KEY
           GEMINI_API_KEY=$GEMINI_API_KEY
+          HUGGING_FACE_API_KEY=$HUGGING_FACE_API_KEY
           EOF
           echo "✓ Created .env file (no Spotify credentials needed - using Kworb)"
 
@@ -70,6 +72,7 @@ jobs:
         if: always()
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          HUGGING_FACE_API_KEY: ${{ secrets.HUGGING_FACE_API_KEY }}
           KALSHI_API_KEY_ID: ${{ secrets.KALSHI_API_KEY_ID }}
           KALSHI_PRIVATE_KEY: ${{ secrets.KALSHI_PRIVATE_KEY }}
         run: |

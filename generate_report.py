@@ -19,10 +19,38 @@ from dotenv import load_dotenv
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'REDACTED_GEMINI_KEY')
+HUGGING_FACE_API_KEY = os.getenv('HUGGING_FACE_API_KEY', 'REDACTED_HF_KEY')
 
 
-# NOTE: Gemini doesn't support image generation - that's Imagen API
-# Using styled text cards instead of generated images
+def generate_song_artwork(track_title, track_artist, predicted_success_rate, region="US"):
+    """
+    Generate song artwork using Hugging Face's Stable Diffusion API.
+    
+    NOTE: As of Jan 2026, Hugging Face's free Inference API (api-inference.huggingface.co)
+    has been deprecated. Image generation now requires:
+    - Hugging Face Pro subscription ($9/month)
+    - Or using dedicated Inference Endpoints (paid)
+    - Or self-hosting the model
+    
+    For now, we'll use styled fallback icons until a free API alternative is available.
+    
+    Args:
+        track_title: Song title
+        track_artist: Artist name
+        predicted_success_rate: Success rate percentage (0-100)
+        region: US or Global
+    
+    Returns:
+        Base64 encoded image data or None (fallback to styled icon)
+    """
+    # Image generation currently disabled - Hugging Face free API deprecated
+    # TODO: Implement one of these alternatives:
+    # 1. Use Spotify Web API to fetch actual album art
+    # 2. Use a free image API (Unsplash, Pexels)
+    # 3. Upgrade to Hugging Face Pro for inference access
+    # 4. Host own Stable Diffusion instance
+    
+    return None  # Use styled music icon fallback
 
 
 def get_gemini_analysis(track_title, track_artist, confidence, streams, region):
@@ -230,15 +258,24 @@ def generate_html_report(trades):
         # Convert confidence to success rate (0-10 scale to 0-100%)
         success_rate = min(100, max(0, confidence * 10))
         
+        # Generate artwork with Hugging Face
+        artwork_b64 = generate_song_artwork(track_title, track_artist, success_rate, region)
+        
         # Get Gemini analysis
         ai_analysis = get_gemini_analysis(track_title, track_artist, confidence, streams, region)
+        
+        # Create artwork HTML (image or fallback icon)
+        if artwork_b64:
+            artwork_html = f'<img src="data:image/png;base64,{artwork_b64}" alt="{track_title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">'
+        else:
+            artwork_html = '<div class="song-icon">🎵</div>'
         
         # Create song card
         song_cards_html += f"""
         <div class="song-card">
             <div class="song-artwork">
                 <div class="success-badge">{success_rate}%</div>
-                <div class="song-icon">🎵</div>
+                {artwork_html}
             </div>
             <div class="song-details">
                 <h3 class="song-title">{track_title}</h3>
