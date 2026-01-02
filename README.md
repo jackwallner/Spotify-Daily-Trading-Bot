@@ -2,13 +2,16 @@
 
 A Python trading bot that discovers and optionally trades **Spotify daily** markets on Kalshi.
 
+The bot uses **Kworb** (kworb.net) to scrape real-time Spotify chart data, eliminating the need for Spotify API credentials.
+
 The bot is intentionally conservative: it uses market microstructure (orderbook + recent activity + time-to-close)
 and can optionally ask Gemini to approve/override decisions.
 
 ## Features
 
+- **Kworb chart integration**: Real-time Spotify chart data from Kworb (no Spotify API needed)
 - **Spotify daily market targeting**: Centralized filtering in `spotify_daily_markets.py`
-- **Market-agnostic signals**: No BTC strike parsing; uses market pricing + timing in `spotify_daily_intelligence.py`
+- **Stream-based signals**: Uses actual stream counts from Kworb for more accurate predictions
 - **Risk cap**: Per-order hard cap of **$1** (`MAX_TRADE_COST_CENTS = 100`)
 - **Audit trail**: Writes `trades.jsonl` (preferred) and `trades.log` (legacy)
 - **HTML report**: Generated into `docs/index.html`
@@ -35,6 +38,8 @@ KALSHI_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----
 ...
 -----END PRIVATE KEY-----
 ```
+
+Note: **No Spotify API credentials needed!** The bot uses Kworb for chart data.
 
 Optional (AI decision layer):
 
