@@ -379,7 +379,17 @@ def main():
                 continue
 
             # 3) Pick the contract market for the predicted track
+            print(f"[MATCHING] Searching {len(markets)} markets for: '{track_title}' by {track_artist}")
             chosen_market = select_market_for_track(markets, track_title=track_title, track_artist=track_artist)
+            
+            if not chosen_market and len(markets) > 0:
+                # Debug: Show first 5 market titles
+                print(f"[DEBUG] Failed to match. First 5 market titles:")
+                for i, m in enumerate(markets[:5], 1):
+                    m_title = getattr(m, "title", "N/A")
+                    m_ticker = getattr(m, "ticker", "N/A")
+                    print(f"  {i}. {m_ticker}: {m_title}")
+            
             if not chosen_market:
                 # If event only has one market, fall back to it.
                 if len(markets) == 1:

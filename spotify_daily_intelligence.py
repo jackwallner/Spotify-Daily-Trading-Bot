@@ -111,9 +111,22 @@ def select_market_for_track(markets: List[Any], track_title: str, track_artist: 
     """
     Best-effort matching between Spotify track and Kalshi market contract.
     We prefer matching on title, then artist.
+    
+    Improved to handle:
+    - Feature artists in parentheses: "Golden(w/Ejae, AUDREY NUNA...)" -> "Golden"
+    - Multiple words in title
+    - Different formatting between Kworb and Kalshi
     """
-    t_title = _normalize_text(track_title)
+    # Extract base title (remove features in parentheses)
+    base_title = track_title.split('(')[0].split('[')[0].strip()
+    
+    t_title = _normalize_text(base_title)
     t_artist = _normalize_text(track_artist)
+    
+    # Also get individual words for fuzzy matching
+    title_words = [w for w in t_title.split() if len(w) >= 3]
+    artist_words = [w for w in t_artist.split() if len(w) >= 3]
+    
     if not t_title and not t_artist:
         return None
 
@@ -122,25 +135,44 @@ def select_market_for_track(markets: List[Any], track_title: str, track_artist: 
 
     for m in markets or []:
         title = _normalize_text(str(getattr(m, "title", "") or ""))
+        subtitle = _normalize_text(str(getattr(m, "subtitle", "") or ""))
         ticker = _normalize_text(str(getattr(m, "ticker", "") or ""))
-        blob = f"{title} {ticker}".strip()
+        blob = f"{title} {subtitle} {ticker}".strip()
+        
         score = 0
+        
+        # Exact title match (high score)
         if t_title and t_title in blob:
-            score += 10
+            score += 20
+        
+        # Exact artist match (medium score)
         if t_artist and t_artist in blob:
-            score += 5
-        # partial: if any word from title present
-        if score == 0 and t_title:
-            for w in t_title.split():
-                if len(w) >= 4 and w in blob:
-                    score += 1
+            score += 10
+        
+        # Partial word matching for title
+        for word in title_words:
+            if word in blob:
+                score += 2
+        
+        # Partial word matching for artist
+        for word in artist_words:
+            if word in blob:
+                score += 3
 
         if score > best_score:
             best_score = score
             best = m
 
+    # Lower threshold - accept any match with score > 0
     if best_score <= 0:
         return None
+    
+    # Log the match for debugging
+    if best:
+        match_title = getattr(best, "title", "")
+        match_ticker = getattr(best, "ticker", "")
+        print(f"[MATCH] Score={best_score}: {match_ticker} - {match_title}")
+    
     return best
 
 
