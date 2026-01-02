@@ -1,0 +1,43 @@
+{
+  "version": 3,
+  "framework": "smart_signals_v2",
+  "last_updated": "2025-12-31",
+  "notes": "MANUAL CONTROL - Gemini analyzes but does NOT auto-tune. Adjust factors below as needed.",
+
+  "weights": {
+    "momentum": 0.55,
+    "orderbook": 0.15,
+    "trade_flow": 0.15,
+    "liquidity": 0.10,
+    "volatility": 0.05
+  },
+
+  "thresholds": {
+    "buy_yes": 52,
+    "buy_no": 48,
+    "skip_zone_low": 48,
+    "skip_zone_high": 52
+  },
+
+  "factors": {
+    "min_edge_percent": 0.005,
+    "high_confidence_edge_percent": 0.10,
+    "critical_distance_dollars": 50,
+    "safe_distance_dollars": 200,
+    "strong_market_consensus": 60,
+    "weak_market_consensus": 40,
+    "expiry_critical_minutes": 2,
+    "expiry_urgent_minutes": 7
+  },
+
+  "factor_descriptions": {
+    "min_edge_percent": "Minimum edge required to trade (0.01 = 1%). Lower = more aggressive.",
+    "high_confidence_edge_percent": "Edge that triggers high confidence (0.15 = 15%).",
+    "critical_distance_dollars": "Skip if BTC within this $ of strike. Higher = more conservative.",
+    "safe_distance_dollars": "Confident trade if BTC beyond this $ from strike.",
+    "strong_market_consensus": "If yes_bid > this, market strongly expects YES.",
+    "weak_market_consensus": "If yes_bid < this, market strongly expects NO.",
+    "expiry_critical_minutes": "Skip if < this many minutes to expiry.",
+    "expiry_urgent_minutes": "Reduce confidence if < this many minutes to expiry."
+  }
+}
