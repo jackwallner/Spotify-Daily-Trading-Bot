@@ -1,10 +1,1 @@
-2026-01-02T22:36:25.296735, kxspotifyd-26jan02, ERROR, Event failed: Missing SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET, SPOTIFY, , , 
-2026-01-02T22:36:25.296984, kxspotifyglobald-26jan02, ERROR, Event failed: Missing SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET, SPOTIFY, , , 
-2026-01-02T23:12:58.010465, kxspotifyd-26jan02, ERROR, Event failed: Missing SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET, SPOTIFY, , , 
-2026-01-02T23:12:58.010640, kxspotifyglobald-26jan02, ERROR, Event failed: Missing SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET, SPOTIFY, , , 
-2026-01-02T23:15:03.656702, kxspotifyd-26jan02, ERROR, Event failed: Missing SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET, SPOTIFY, , , 
-2026-01-02T23:15:03.657015, kxspotifyglobald-26jan02, ERROR, Event failed: Missing SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET, SPOTIFY, , , 
-2026-01-02T23:19:20.739355, kxspotifyd-26jan02, NO TRADE, No open markets found for event, SPOTIFY, , , 
-2026-01-02T23:19:22.184954, kxspotifyglobald-26jan02, NO TRADE, No open markets found for event, SPOTIFY, , , 
-2026-01-02T23:41:22.320252, kxspotifyd-26jan02, NO TRADE, Could not match track to a market contract, SPOTIFY, , , 
-2026-01-02T23:41:23.112368, kxspotifyglobald-26jan02, NO TRADE, Could not match track to a market contract, SPOTIFY, , , 
+
