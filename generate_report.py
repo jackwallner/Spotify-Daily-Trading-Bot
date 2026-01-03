@@ -333,6 +333,10 @@ def generate_html_report(data):
     # Generate song cards with Gemini analysis
     song_cards_html = ""
     
+    # Import timezone for conversions
+    from zoneinfo import ZoneInfo
+    et_tz = ZoneInfo("America/New_York")
+    
     for trade in recent_trades:
         decision_log = trade.get('decision_log', {})
         if not isinstance(decision_log, dict):
@@ -348,6 +352,13 @@ def generate_html_report(data):
         region = decision_log.get('region', 'US')
         streams = decision_log.get('streams1', 0)
         timestamp = trade.get('timestamp', '')
+        
+        # Convert timestamp to ET
+        try:
+            ts_utc = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            ts_et = ts_utc.astimezone(et_tz)
+        except:
+            ts_et = None
         
         # Convert confidence to success rate (0-10 scale to 0-100%)
         success_rate = min(100, max(0, confidence * 10))
@@ -396,7 +407,7 @@ def generate_html_report(data):
                 </div>
                 <div class="prediction-info">
                     <span class="confidence">Confidence: {confidence}/10</span>
-                    <span class="timestamp">{timestamp[:10]}</span>
+                    <span class="timestamp">{ts_et.strftime('%m/%d/%y %I:%M%p ET') if timestamp else 'N/A'}</span>
                 </div>
                 <div class="ai-analysis">
                     <strong>🤖 AI Analysis:</strong>
@@ -429,9 +440,18 @@ def generate_html_report(data):
         track_title = predicted.get('title', run.get('market', 'N/A'))
         track_artist = predicted.get('artist', 'N/A')
         
+        # Convert timestamp to ET
+        timestamp_str = run.get('timestamp', '')
+        try:
+            ts_utc = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+            ts_et = ts_utc.astimezone(et_tz)
+            timestamp_display = ts_et.strftime('%Y-%m-%d %I:%M %p ET')
+        except:
+            timestamp_display = timestamp_str[:19]
+        
         history_table_html += f"""
         <tr class="{status_class}">
-            <td>{run.get('timestamp', '')[:19]}</td>
+            <td>{timestamp_display}</td>
             <td>{track_title}</td>
             <td>{track_artist}</td>
             <td>{action}</td>
@@ -442,8 +462,22 @@ def generate_html_report(data):
         """
     
     # Generate HTML
-    # Prepare P/L chart data
-    pnl_labels = [p['timestamp'][:10] for p in stats['pnl_history']]
+    # Prepare P/L chart data - convert timestamps to ET
+    from zoneinfo import ZoneInfo
+    et_tz = ZoneInfo("America/New_York")
+    
+    pnl_labels = []
+    for p in stats['pnl_history']:
+        ts_str = p['timestamp']
+        try:
+            # Parse ISO timestamp and convert to ET
+            ts_utc = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+            ts_et = ts_utc.astimezone(et_tz)
+            pnl_labels.append(ts_et.strftime('%m/%d %I:%M%p ET'))
+        except:
+            # Fallback to just the date
+            pnl_labels.append(ts_str[:10])
+    
     pnl_data = [p['pnl'] for p in stats['pnl_history']]
     
     html = f"""<!DOCTYPE html>
@@ -821,7 +855,7 @@ def generate_html_report(data):
         <header>
             <h1>🎵 Spotify Daily Trading Bot</h1>
             <p class="subtitle">Powered by Kworb Chart Data & Gemini AI Analysis</p>
-            <p class="subtitle">Last Updated: {datetime.now(timezone.utc).strftime('%B %d, %Y at %H:%M UTC')}</p>
+            <p class="subtitle">Last Updated: {datetime.now(ZoneInfo("America/New_York")).strftime('%B %d, %Y at %I:%M %p ET')}</p>
         </header>
         
         <div class="stats-grid">
