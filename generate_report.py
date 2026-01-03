@@ -494,12 +494,70 @@ def generate_html_report(data):
             box-sizing: border-box;
         }}
         
+        @keyframes gradient-shift {{
+            0% {{ background-position: 0% 50%; }}
+            50% {{ background-position: 100% 50%; }}
+            100% {{ background-position: 0% 50%; }}
+        }}
+        
+        @keyframes float {{
+            0%, 100% {{ transform: translateY(0px); }}
+            50% {{ transform: translateY(-20px); }}
+        }}
+        
+        @keyframes pulse {{
+            0%, 100% {{ opacity: 1; }}
+            50% {{ opacity: 0.5; }}
+        }}
+        
+        @keyframes slideInUp {{
+            from {{
+                opacity: 0;
+                transform: translateY(30px);
+            }}
+            to {{
+                opacity: 1;
+                transform: translateY(0);
+            }}
+        }}
+        
+        @keyframes shimmer {{
+            0% {{ background-position: -1000px 0; }}
+            100% {{ background-position: 1000px 0; }}
+        }}
+        
+        @keyframes fadeOut {{
+            to {{ opacity: 0; }}
+        }}
+        
+        @keyframes glow {{
+            0%, 100% {{ box-shadow: 0 0 20px rgba(29, 185, 84, 0.5); }}
+            50% {{ box-shadow: 0 0 40px rgba(29, 185, 84, 0.8); }}
+        }}
+        
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #121212;
+            background: linear-gradient(-45deg, #0a0a0a, #1a1a1a, #0d1b0d, #1a1a1a);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
             color: #fff;
             padding: 20px;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }}
+        
+        body::before {{
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(29, 185, 84, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(29, 185, 84, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
         }}
         
         .container {{
@@ -519,7 +577,13 @@ def generate_html_report(data):
         h1 {{
             font-size: 3em;
             margin-bottom: 10px;
-            color: #fff;
+            background: linear-gradient(90deg, #1db954, #1ed760, #1db954);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite;
+            text-shadow: 0 0 30px rgba(29, 185, 84, 0.3);
         }}
         
         .subtitle {{
@@ -542,6 +606,39 @@ def generate_html_report(data):
             text-align: center;
             border: 2px solid rgba(29, 185, 84, 0.3);
             backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: slideInUp 0.6s ease-out backwards;
+        }}
+        
+        .stat-card:nth-child(1) {{ animation-delay: 0.1s; }}
+        .stat-card:nth-child(2) {{ animation-delay: 0.2s; }}
+        .stat-card:nth-child(3) {{ animation-delay: 0.3s; }}
+        .stat-card:nth-child(4) {{ animation-delay: 0.4s; }}
+        .stat-card:nth-child(5) {{ animation-delay: 0.5s; }}
+        .stat-card:nth-child(6) {{ animation-delay: 0.6s; }}
+        
+        .stat-card::before {{
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(29, 185, 84, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s;
+        }}
+        
+        .stat-card:hover {{
+            transform: translateY(-10px) scale(1.02);
+            border-color: #1db954;
+            box-shadow: 0 15px 40px rgba(29, 185, 84, 0.3);
+        }}
+        
+        .stat-card:hover::before {{
+            left: 100%;
         }}
         
         .stat-value {{
@@ -549,6 +646,13 @@ def generate_html_report(data):
             font-weight: bold;
             color: #1db954;
             margin: 10px 0;
+            text-shadow: 0 0 20px rgba(29, 185, 84, 0.5);
+            transition: all 0.3s;
+        }}
+        
+        .stat-card:hover .stat-value {{
+            transform: scale(1.1);
+            text-shadow: 0 0 30px rgba(29, 185, 84, 0.8);
         }}
         
         .stat-label {{
@@ -572,6 +676,20 @@ def generate_html_report(data):
             font-size: 2em;
             margin-bottom: 20px;
             color: #1db954;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 10px;
+        }}
+        
+        .section-title::after {{
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #1db954, transparent);
+            animation: glow 2s ease-in-out infinite;
         }}
         
         .songs-grid {{
@@ -586,14 +704,35 @@ def generate_html_report(data):
             border-radius: 15px;
             padding: 20px;
             border: 2px solid rgba(29, 185, 84, 0.2);
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             backdrop-filter: blur(10px);
+            animation: slideInUp 0.8s ease-out backwards;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .song-card::after {{
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(29, 185, 84, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
         }}
         
         .song-card:hover {{
             border-color: #1db954;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(29, 185, 84, 0.2);
+            transform: translateY(-10px) rotateY(2deg);
+            box-shadow: 0 20px 40px rgba(29, 185, 84, 0.4);
+        }}
+        
+        .song-card:hover::after {{
+            width: 500px;
+            height: 500px;
         }}
         
         .song-artwork {{
@@ -608,12 +747,24 @@ def generate_html_report(data):
             margin-bottom: 15px;
             overflow: hidden;
             border: 2px solid #333;
+            transition: all 0.3s;
+        }}
+        
+        .song-card:hover .song-artwork {{
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(29, 185, 84, 0.3);
         }}
         
         .song-icon {{
             font-size: 4em;
             opacity: 0.5;
             color: #1db954;
+            animation: float 3s ease-in-out infinite;
+        }}
+        
+        .song-card:hover .song-icon {{
+            animation: float 1s ease-in-out infinite;
+            opacity: 0.8;
         }}
         
         .success-badge {{
@@ -627,6 +778,8 @@ def generate_html_report(data):
             font-size: 1.5em;
             font-weight: bold;
             border: 2px solid #1db954;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(29, 185, 84, 0.5);
         }}
         
         .song-details {{
@@ -767,6 +920,7 @@ def generate_html_report(data):
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            animation: slideInUp 1s ease-out;
         }}
         
         th {{
@@ -830,6 +984,16 @@ def generate_html_report(data):
             border: 2px solid rgba(29, 185, 84, 0.2);
             max-width: 900px;
             margin: 0 auto;
+            animation: slideInUp 1.2s ease-out;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s;
+        }}
+        
+        .chart-container:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(29, 185, 84, 0.2);
+            border-color: #1db954;
         }}
         
         #pnlChart {{
@@ -935,6 +1099,72 @@ def generate_html_report(data):
     </div>
     
     <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {{
+            anchor.addEventListener('click', function (e) {{
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({{
+                    behavior: 'smooth'
+                }});
+            }});
+        }});
+        
+        // Animate numbers counting up
+        function animateValue(element, start, end, duration) {{
+            let startTimestamp = null;
+            const step = (timestamp) => {{
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                element.textContent = value;
+                if (progress < 1) {{
+                    window.requestAnimationFrame(step);
+                }}
+            }};
+            window.requestAnimationFrame(step);
+        }}
+        
+        // Animate stat cards on load
+        window.addEventListener('load', () => {{
+            document.querySelectorAll('.stat-value').forEach(el => {{
+                const value = parseInt(el.textContent);
+                if (!isNaN(value)) {{
+                    el.textContent = '0';
+                    setTimeout(() => {{
+                        animateValue(el, 0, value, 1500);
+                    }}, 500);
+                }}
+            }});
+        }});
+        
+        // Parallax effect on scroll
+        window.addEventListener('scroll', () => {{
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('header');
+            if (parallax) {{
+                parallax.style.transform = `translateY(${{scrolled * 0.5}}px)`;
+            }}
+        }});
+        
+        // Add sparkle effect on hover
+        document.querySelectorAll('.stat-card, .song-card').forEach(card => {{
+            card.addEventListener('mouseenter', function(e) {{
+                const sparkle = document.createElement('div');
+                sparkle.style.cssText = `
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    top: 0;
+                    left: 0;
+                    background: radial-gradient(circle at ${{e.offsetX}}px ${{e.offsetY}}px, rgba(29, 185, 84, 0.3) 0%, transparent 60%);
+                    pointer-events: none;
+                    animation: fadeOut 1s forwards;
+                `;
+                this.appendChild(sparkle);
+                setTimeout(() => sparkle.remove(), 1000);
+            }});
+        }});
+        
         // P/L Chart
         const ctx = document.getElementById('pnlChart');
         if (ctx) {{
