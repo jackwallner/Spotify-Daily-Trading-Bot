@@ -243,10 +243,12 @@ def calculate_stats(trades, runs):
     """
     if not runs:
         return {
+            'total_runs': 0,
             'total_trades': 0,
-            'successful': 0,
-            'failed': 0,
-            'skipped': 0,
+            'successful_trades': 0,
+            'failed_attempts': 0,
+            'no_trade_runs': 0,
+            'errors': 0,
             'success_rate': 0.0,
             'total_cost': 0.0,
             'avg_confidence': 0.0,
