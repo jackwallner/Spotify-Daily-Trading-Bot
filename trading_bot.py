@@ -267,10 +267,64 @@ def place_trade(kalshi_client, market, side: str, limit_price: int, contract_cou
         # Only mark as Success if we got an order_id back from Kalshi
         success = bool(order_response and order_id)
         
+        if not success:
+            return {
+                "status": "Failed",
+                "price": None,
+                "contracts": None,
+                "order_response": order_response,
+                "order_id": None,
+            }
+        
+        # Wait for order to fill and get actual executed price
+        import time
+        print(f"[ORDER] Waiting 10 seconds for order to fill...")
+        time.sleep(10)
+        
+        actual_price = limit_price
+        actual_contracts = contract_count
+        
+        try:
+            # Get order details to see actual fill price
+            order_details = kalshi_client.get_order(order_id)
+            
+            # Extract actual fill info
+            if hasattr(order_details, "order"):
+                order_obj = order_details.order
+            else:
+                order_obj = order_details
+            
+            # Get yes_price or no_price depending on side
+            if side == "yes":
+                filled_price = getattr(order_obj, "yes_price", None)
+            else:
+                filled_price = getattr(order_obj, "no_price", None)
+            
+            # Also try getting from fills
+            if not filled_price and hasattr(order_obj, "fills"):
+                fills = getattr(order_obj, "fills", [])
+                if fills and len(fills) > 0:
+                    first_fill = fills[0]
+                    filled_price = getattr(first_fill, "price", None)
+            
+            # Get filled count
+            filled_count = getattr(order_obj, "filled_count", None) or getattr(order_obj, "count", None)
+            
+            if filled_price:
+                actual_price = int(filled_price)
+                print(f"[ORDER] ✓ Filled at {actual_price}¢ (limit was {limit_price}¢)")
+            
+            if filled_count:
+                actual_contracts = int(filled_count)
+                
+        except Exception as e:
+            print(f"[ORDER] Could not fetch fill details: {e}")
+            print(f"[ORDER] Using limit price {limit_price}¢ as fallback")
+        
         return {
-            "status": "Success" if success else "Failed",
-            "price": limit_price if success else None,
-            "contracts": contract_count if success else None,
+            "status": "Success",
+            "price": actual_price,
+            "contracts": actual_contracts,
             "order_response": order_response,
             "order_id": order_id,
         }
