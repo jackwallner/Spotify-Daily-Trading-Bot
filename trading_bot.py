@@ -372,9 +372,18 @@ def main():
         dd = f"{dt.day:02d}"
         return f"{yy}{mon}{dd}"
 
+    # Use Eastern Time (ET) for determining market date, not UTC
+    # Spotify charts and Kalshi markets are based on ET calendar days
+    from zoneinfo import ZoneInfo
+    et_tz = ZoneInfo("America/New_York")
+    now_et = datetime.now(et_tz)
+    
     override = os.getenv("SPOTIFY_MARKET_DATE", "").strip().lower()
-    suffix = override if override else _date_suffix(datetime.now(timezone.utc))
-    today_utc = datetime.now(timezone.utc).date().isoformat()
+    suffix = override if override else _date_suffix(now_et)
+    today_et = now_et.date().isoformat()
+    
+    print(f"[TIME] Current ET: {now_et.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    print(f"[TIME] Trading markets for: {suffix}")
 
     target_events = [
         {"event_ticker": f"kxspotifyd-{suffix}", "region": "US", "label": "Top US song"},
@@ -391,13 +400,13 @@ def main():
         print(f"\n[EVENT] {event_ticker} ({label})")
 
         try:
-            if already_traded_event_today(event_ticker, today_utc):
+            if already_traded_event_today(event_ticker, today_et):
                 log_trade(
                     event_ticker,
                     "SKIPPED",
-                    f"Already traded this event today ({today_utc})",
+                    f"Already traded this event today ({today_et})",
                     asset="SPOTIFY",
-                    decision_log={"reason": "already_traded_today", "event_ticker": event_ticker, "day_utc": today_utc},
+                    decision_log={"reason": "already_traded_today", "event_ticker": event_ticker, "day_et": today_et},
                 )
                 continue
 
