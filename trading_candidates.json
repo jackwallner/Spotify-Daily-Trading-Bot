@@ -1,0 +1,170 @@
+{
+  "timestamp": "2026-01-04T00:46:56.830784",
+  "tracks": [
+    {
+      "track_name": "Man I Need",
+      "artist_name": "Olivia Dean",
+      "prediction_score": 88.2013565,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "The Fate of Ophelia",
+      "artist_name": "Taylor Swift",
+      "prediction_score": 87.78283735,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "Choosin' Texas",
+      "artist_name": "Ella Langley",
+      "prediction_score": 87.6470145,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "End of Beginning",
+      "artist_name": "Djo",
+      "prediction_score": 87.4603106,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "Ordinary",
+      "artist_name": "Alex Warren",
+      "prediction_score": 84.68377369999999,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "What You Saying",
+      "artist_name": "Lil Uzi Vert",
+      "prediction_score": 84.0697295,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "So Easy (To Fall In Love)",
+      "artist_name": "Olivia Dean",
+      "prediction_score": 82.80669005,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "I Got Better",
+      "artist_name": "Morgan Wallen",
+      "prediction_score": 82.30087505,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "Opalite",
+      "artist_name": "Taylor Swift",
+      "prediction_score": 82.1931827,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "back to friends",
+      "artist_name": "sombr",
+      "prediction_score": 79.7331308,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "Folded",
+      "artist_name": "Kehlani",
+      "prediction_score": 79.14515804999999,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "A Couple Minutes",
+      "artist_name": "Olivia Dean",
+      "prediction_score": 77.5789065,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "Purple Rain",
+      "artist_name": "Prince",
+      "prediction_score": 75.4424612,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "I Had Some Help (Feat. Morgan Wallen)(w/Morgan Wallen)",
+      "artist_name": "Post Malone",
+      "prediction_score": 74.51901509999999,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    },
+    {
+      "track_name": "luther",
+      "artist_name": "Kendrick Lamar",
+      "prediction_score": 70.84821674999999,
+      "confidence": 80,
+      "data_sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validated": true
+    }
+  ]
+}

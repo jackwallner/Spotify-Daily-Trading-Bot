@@ -68,16 +68,25 @@ class MultiSourcePredictor:
                 if len(cells) < 7:
                     continue
                 
-                # Extract data
+                # Extract data - Format is usually "Artist - Title"
                 artist_title = cells[2].get_text(strip=True)
                 daily_streams_text = cells[6].get_text(strip=True).replace(',', '')
                 
-                # Parse artist and title
-                if ' - ' in artist_title:
-                    artist, title = artist_title.split(' - ', 1)
-                else:
-                    artist = "Unknown"
-                    title = artist_title
+                # Parse artist and title with better logic
+                artist = "Unknown"
+                title = artist_title
+                
+                # Handle "Artist-Title" format (most common on Kworb)
+                if '-' in artist_title:
+                    parts = artist_title.split('-', 1)
+                    if len(parts) == 2:
+                        potential_artist = parts[0].strip()
+                        potential_title = parts[1].strip()
+                        
+                        # Validate: artist name shouldn't be too long or contain special markers
+                        if len(potential_artist) < 50 and '(' not in potential_artist[:10]:
+                            artist = potential_artist
+                            title = potential_title
                 
                 # Parse streams
                 try:

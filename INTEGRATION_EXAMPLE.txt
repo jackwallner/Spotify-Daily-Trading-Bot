@@ -1,0 +1,31 @@
+
+# In trading_bot.py, replace the Kworb section with:
+
+from multi_source_predictor import MultiSourcePredictor
+
+def get_trending_tracks():
+    """Get trending tracks from multiple sources."""
+    predictor = MultiSourcePredictor()
+    predictions = predictor.predict_top_songs(top_n=20)
+    
+    # Filter for high confidence only
+    high_confidence = [p for p in predictions if p['confidence'] >= 75]
+    
+    # Convert to expected format
+    tracks = []
+    for pred in high_confidence:
+        tracks.append({
+            'title': pred['title'],
+            'artist': pred['artist'],
+            'daily_streams': 0,  # Not needed with multi-source
+            'region': 'US',
+            'prediction_score': pred['score'],
+            'confidence': pred['confidence']
+        })
+    
+    return tracks
+
+# Then use as before:
+tracks = get_trending_tracks()
+for track in tracks[:10]:  # Top 10 only
+    # ... existing market matching and trading logic ...
