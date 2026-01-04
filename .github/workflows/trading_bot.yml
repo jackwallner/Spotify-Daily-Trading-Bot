@@ -2,9 +2,9 @@ name: Spotify Daily Markets Bot
 
 on:
   schedule:
-    # Run every day at 7:05 PM ET (12:05 AM UTC next day during EST)
-    # Evening run after work hours, before market close
-    - cron: '5 0 * * *'
+    # Run every day at 4:00 PM ET (9:00 PM UTC during EST, 8:00 PM UTC during EDT)
+    # Earlier timing for better market entry
+    - cron: '0 21 * * *'
   workflow_dispatch:  # Allow manual triggers
 
 concurrency:
