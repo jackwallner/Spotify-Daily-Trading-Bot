@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-01-04T17:54:32.491696",
+  "actual_winner": {
+    "title": "End of Beginning",
+    "artist": "Djo",
+    "daily_streams": 1378468,
+    "source": "spotify_actual"
+  },
+  "multi_source": {
+    "correct": true,
+    "rank": 2,
+    "top_prediction": {
+      "title": "Man I Need",
+      "artist": "Olivia Dean",
+      "score": 87.8513565,
+      "sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validation": 2,
+      "confidence": 80
+    }
+  },
+  "kworb_only": {
+    "correct": true,
+    "rank": 1,
+    "top_prediction": {
+      "title": "End of Beginning",
+      "artist": "Djo",
+      "daily_streams": 1378468,
+      "confidence": 60
+    }
+  },
+  "verdict": "kworb_better"
+}
