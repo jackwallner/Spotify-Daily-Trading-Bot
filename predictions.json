@@ -1,0 +1,205 @@
+{
+  "timestamp": "2026-01-04T00:44:38.353554",
+  "predictions": [
+    {
+      "title": "Djo-End of Beginning",
+      "artist": "Unknown",
+      "score": 45.9103106,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "Olivia Dean-Man I Need",
+      "artist": "Unknown",
+      "score": 45.601356499999994,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "Taylor Swift-The Fate of Ophelia",
+      "artist": "Unknown",
+      "score": 45.35783735,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "HUNTR/X-Golden(w/Ejae,AUDREY NUNA,REI AMI,KPop Demon Hunters Cast)",
+      "artist": "Unknown",
+      "score": 45.1321607,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "Ella Langley-Choosin' Texas",
+      "artist": "Unknown",
+      "score": 44.87201449999999,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "KATSEYE-Internet Girl",
+      "artist": "Unknown",
+      "score": 44.65357025,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "Olivia Dean-So Easy (To Fall In Love)",
+      "artist": "Unknown",
+      "score": 44.406690049999995,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "Alex Warren-Ordinary",
+      "artist": "Unknown",
+      "score": 44.18377369999999,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "sombr-back to friends",
+      "artist": "Unknown",
+      "score": 43.95813079999999,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "2004 Remaster",
+      "artist": "Fleetwood Mac-Dreams",
+      "score": 43.732699399999994,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "She & Him-I Thought I Saw Your Face Today",
+      "artist": "Unknown",
+      "score": 43.51841045,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "RAYE-WHERE IS MY HUSBAND!",
+      "artist": "Unknown",
+      "score": 43.29076505,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "EsDeeKid-4 Raws",
+      "artist": "Unknown",
+      "score": 43.06197485,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "FDO",
+      "artist": "Pooh Shiesty",
+      "score": 42.95,
+      "sources": [
+        "apple_music"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "Morgan Wallen-I Got Better",
+      "artist": "Unknown",
+      "score": 42.85087505,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "Choosin' Texas",
+      "artist": "Ella Langley",
+      "score": 42.775,
+      "sources": [
+        "apple_music"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "Chappell Roan-Pink Pony Club",
+      "artist": "Unknown",
+      "score": 42.63998585,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "Man I Need",
+      "artist": "Olivia Dean",
+      "score": 42.599999999999994,
+      "sources": [
+        "apple_music"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "The Killers-Mr. Brightside",
+      "artist": "Unknown",
+      "score": 42.4285562,
+      "sources": [
+        "kworb"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    },
+    {
+      "title": "The Fate of Ophelia",
+      "artist": "Taylor Swift",
+      "score": 42.425,
+      "sources": [
+        "apple_music"
+      ],
+      "cross_validation": 1,
+      "confidence": 65
+    }
+  ]
+}
