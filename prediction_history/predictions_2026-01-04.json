@@ -1,0 +1,489 @@
+{
+  "date": "2026-01-04",
+  "prediction_time": "2026-01-04T12:58:41.982558-05:00",
+  "prediction_time_str": "12:58 PM",
+  "current_snapshot": {
+    "timestamp": "2026-01-04T12:58:43.050477-05:00",
+    "top_20": [
+      {
+        "rank": 1,
+        "title": "End of Beginning",
+        "artist": "Djo",
+        "daily_streams": 1378468
+      },
+      {
+        "rank": 2,
+        "title": "Man I Need",
+        "artist": "Olivia Dean",
+        "daily_streams": 1158570
+      },
+      {
+        "rank": 3,
+        "title": "The Fate of Ophelia",
+        "artist": "Taylor Swift",
+        "daily_streams": 1084083
+      },
+      {
+        "rank": 4,
+        "title": "Golden(w/Ejae,AUDREY NUNA,REI AMI,KPop Demon Hunters Cast)",
+        "artist": "HUNTR/X",
+        "daily_streams": 1049246
+      },
+      {
+        "rank": 5,
+        "title": "Choosin' Texas",
+        "artist": "Ella Langley",
+        "daily_streams": 937810
+      },
+      {
+        "rank": 6,
+        "title": "Internet Girl",
+        "artist": "KATSEYE",
+        "daily_streams": 919045
+      },
+      {
+        "rank": 7,
+        "title": "So Easy (To Fall In Love)",
+        "artist": "Olivia Dean",
+        "daily_streams": 837089
+      },
+      {
+        "rank": 8,
+        "title": "Ordinary",
+        "artist": "Alex Warren",
+        "daily_streams": 808386
+      },
+      {
+        "rank": 9,
+        "title": "back to friends",
+        "artist": "sombr",
+        "daily_streams": 773624
+      },
+      {
+        "rank": 10,
+        "title": "Dreams - 2004 Remaster",
+        "artist": "Fleetwood Mac",
+        "daily_streams": 739332
+      },
+      {
+        "rank": 11,
+        "title": "I Thought I Saw Your Face Today",
+        "artist": "She & Him",
+        "daily_streams": 729801
+      },
+      {
+        "rank": 12,
+        "title": "WHERE IS MY HUSBAND!",
+        "artist": "RAYE",
+        "daily_streams": 690589
+      },
+      {
+        "rank": 13,
+        "title": "4 Raws",
+        "artist": "EsDeeKid",
+        "daily_streams": 648833
+      },
+      {
+        "rank": 14,
+        "title": "I Got Better",
+        "artist": "Morgan Wallen",
+        "daily_streams": 646389
+      },
+      {
+        "rank": 15,
+        "title": "Pink Pony Club",
+        "artist": "Chappell Roan",
+        "daily_streams": 644413
+      },
+      {
+        "rank": 16,
+        "title": "Mr. Brightside",
+        "artist": "The Killers",
+        "daily_streams": 641236
+      },
+      {
+        "rank": 17,
+        "title": "Opalite",
+        "artist": "Taylor Swift",
+        "daily_streams": 640406
+      },
+      {
+        "rank": 18,
+        "title": "What You Saying",
+        "artist": "Lil Uzi Vert",
+        "daily_streams": 610510
+      },
+      {
+        "rank": 19,
+        "title": "Landslide",
+        "artist": "Fleetwood Mac",
+        "daily_streams": 610156
+      },
+      {
+        "rank": 20,
+        "title": "Every Breath You Take",
+        "artist": "The Police",
+        "daily_streams": 605454
+      }
+    ]
+  },
+  "multi_source": {
+    "top_20": [
+      {
+        "title": "Man I Need",
+        "artist": "Olivia Dean",
+        "score": 87.8513565,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "End of Beginning",
+        "artist": "Djo",
+        "score": 87.8103106,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "Choosin' Texas",
+        "artist": "Ella Langley",
+        "score": 87.6470145,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "The Fate of Ophelia",
+        "artist": "Taylor Swift",
+        "score": 87.43283735,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "What You Saying",
+        "artist": "Lil Uzi Vert",
+        "score": 84.41972949999999,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "Ordinary",
+        "artist": "Alex Warren",
+        "score": 84.1587737,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "So Easy (To Fall In Love)",
+        "artist": "Olivia Dean",
+        "score": 82.63169005,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "I Got Better",
+        "artist": "Morgan Wallen",
+        "score": 80.90087505,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "Folded",
+        "artist": "Kehlani",
+        "score": 79.49515805,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "Opalite",
+        "artist": "Taylor Swift",
+        "score": 79.3931827,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "back to friends",
+        "artist": "sombr",
+        "score": 79.20813079999999,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "A Couple Minutes",
+        "artist": "Olivia Dean",
+        "score": 77.7539065,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "Purple Rain",
+        "artist": "Prince",
+        "score": 76.14246119999999,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "I Had Some Help (Feat. Morgan Wallen)(w/Morgan Wallen)",
+        "artist": "Post Malone",
+        "score": 72.76901509999999,
+        "sources": [
+          "kworb",
+          "apple_music"
+        ],
+        "cross_validation": 2,
+        "confidence": 80
+      },
+      {
+        "title": "Golden(w/Ejae,AUDREY NUNA,REI AMI,KPop Demon Hunters Cast)",
+        "artist": "HUNTR/X",
+        "score": 45.1321607,
+        "sources": [
+          "kworb"
+        ],
+        "cross_validation": 1,
+        "confidence": 65
+      },
+      {
+        "title": "Internet Girl",
+        "artist": "KATSEYE",
+        "score": 44.65357025,
+        "sources": [
+          "kworb"
+        ],
+        "cross_validation": 1,
+        "confidence": 65
+      },
+      {
+        "title": "Dreams - 2004 Remaster",
+        "artist": "Fleetwood Mac",
+        "score": 43.732699399999994,
+        "sources": [
+          "kworb"
+        ],
+        "cross_validation": 1,
+        "confidence": 65
+      },
+      {
+        "title": "I Thought I Saw Your Face Today",
+        "artist": "She & Him",
+        "score": 43.51841045,
+        "sources": [
+          "kworb"
+        ],
+        "cross_validation": 1,
+        "confidence": 65
+      },
+      {
+        "title": "WHERE IS MY HUSBAND!",
+        "artist": "RAYE",
+        "score": 43.29076505,
+        "sources": [
+          "kworb"
+        ],
+        "cross_validation": 1,
+        "confidence": 65
+      },
+      {
+        "title": "4 Raws",
+        "artist": "EsDeeKid",
+        "score": 43.06197485,
+        "sources": [
+          "kworb"
+        ],
+        "cross_validation": 1,
+        "confidence": 65
+      }
+    ],
+    "top_pick": {
+      "title": "Man I Need",
+      "artist": "Olivia Dean",
+      "score": 87.8513565,
+      "sources": [
+        "kworb",
+        "apple_music"
+      ],
+      "cross_validation": 2,
+      "confidence": 80
+    }
+  },
+  "kworb_only": {
+    "top_20": [
+      {
+        "rank": 1,
+        "title": "End of Beginning",
+        "artist": "Djo",
+        "daily_streams": 1378468
+      },
+      {
+        "rank": 2,
+        "title": "Man I Need",
+        "artist": "Olivia Dean",
+        "daily_streams": 1158570
+      },
+      {
+        "rank": 3,
+        "title": "The Fate of Ophelia",
+        "artist": "Taylor Swift",
+        "daily_streams": 1084083
+      },
+      {
+        "rank": 4,
+        "title": "Golden(w/Ejae,AUDREY NUNA,REI AMI,KPop Demon Hunters Cast)",
+        "artist": "HUNTR/X",
+        "daily_streams": 1049246
+      },
+      {
+        "rank": 5,
+        "title": "Choosin' Texas",
+        "artist": "Ella Langley",
+        "daily_streams": 937810
+      },
+      {
+        "rank": 6,
+        "title": "Internet Girl",
+        "artist": "KATSEYE",
+        "daily_streams": 919045
+      },
+      {
+        "rank": 7,
+        "title": "So Easy (To Fall In Love)",
+        "artist": "Olivia Dean",
+        "daily_streams": 837089
+      },
+      {
+        "rank": 8,
+        "title": "Ordinary",
+        "artist": "Alex Warren",
+        "daily_streams": 808386
+      },
+      {
+        "rank": 9,
+        "title": "back to friends",
+        "artist": "sombr",
+        "daily_streams": 773624
+      },
+      {
+        "rank": 10,
+        "title": "Dreams - 2004 Remaster",
+        "artist": "Fleetwood Mac",
+        "daily_streams": 739332
+      },
+      {
+        "rank": 11,
+        "title": "I Thought I Saw Your Face Today",
+        "artist": "She & Him",
+        "daily_streams": 729801
+      },
+      {
+        "rank": 12,
+        "title": "WHERE IS MY HUSBAND!",
+        "artist": "RAYE",
+        "daily_streams": 690589
+      },
+      {
+        "rank": 13,
+        "title": "4 Raws",
+        "artist": "EsDeeKid",
+        "daily_streams": 648833
+      },
+      {
+        "rank": 14,
+        "title": "I Got Better",
+        "artist": "Morgan Wallen",
+        "daily_streams": 646389
+      },
+      {
+        "rank": 15,
+        "title": "Pink Pony Club",
+        "artist": "Chappell Roan",
+        "daily_streams": 644413
+      },
+      {
+        "rank": 16,
+        "title": "Mr. Brightside",
+        "artist": "The Killers",
+        "daily_streams": 641236
+      },
+      {
+        "rank": 17,
+        "title": "Opalite",
+        "artist": "Taylor Swift",
+        "daily_streams": 640406
+      },
+      {
+        "rank": 18,
+        "title": "What You Saying",
+        "artist": "Lil Uzi Vert",
+        "daily_streams": 610510
+      },
+      {
+        "rank": 19,
+        "title": "Landslide",
+        "artist": "Fleetwood Mac",
+        "daily_streams": 610156
+      },
+      {
+        "rank": 20,
+        "title": "Every Breath You Take",
+        "artist": "The Police",
+        "daily_streams": 605454
+      }
+    ],
+    "top_pick": {
+      "rank": 1,
+      "title": "End of Beginning",
+      "artist": "Djo",
+      "daily_streams": 1378468
+    }
+  }
+}
