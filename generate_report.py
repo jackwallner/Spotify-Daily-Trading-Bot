@@ -377,8 +377,8 @@ def generate_html_report(data):
     theoretical_trades = data.get('theoretical_trades', [])
     stats = calculate_stats(trades, runs, theoretical_trades)
     
-    # Get recent ACTUAL trades for analysis (not NO TRADE runs)
-    recent_trades = sorted(trades, key=lambda x: x.get('timestamp', ''), reverse=True)[:10]
+    # Get recent predictions from ALL runs (not just executed trades)
+    recent_predictions = sorted(runs, key=lambda x: x.get('timestamp', ''), reverse=True)[:10]
     
     # Get recent runs for history table (includes NO TRADE)
     recent_runs = sorted(runs, key=lambda x: x.get('timestamp', ''), reverse=True)[:20]
@@ -390,8 +390,8 @@ def generate_html_report(data):
     from zoneinfo import ZoneInfo
     et_tz = ZoneInfo("America/New_York")
     
-    for trade in recent_trades:
-        decision_log = trade.get('decision_log', {})
+    for prediction in recent_predictions:
+        decision_log = prediction.get('decision_log', {})
         if not isinstance(decision_log, dict):
             continue
         
@@ -404,7 +404,7 @@ def generate_html_report(data):
         confidence = decision_log.get('confidence', 5)
         region = decision_log.get('region', 'US')
         streams = decision_log.get('streams1', 0)
-        timestamp = trade.get('timestamp', '')
+        timestamp = prediction.get('timestamp', '')
         
         # Convert timestamp to ET
         try:
