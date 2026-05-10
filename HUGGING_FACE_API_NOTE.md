@@ -141,7 +141,7 @@ env:
   HUGGING_FACE_API_KEY: ${{ secrets.HUGGING_FACE_API_KEY }}
 ```
 
-**Key:** `REDACTED_HF_KEY`
+**Key:** `REDACTED`
 
 This is configured but not actively used since image generation is disabled.
 

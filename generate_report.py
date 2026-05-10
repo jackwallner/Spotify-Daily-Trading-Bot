@@ -18,8 +18,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'REDACTED_GEMINI_KEY')
-HUGGING_FACE_API_KEY = os.getenv('HUGGING_FACE_API_KEY', 'REDACTED_HF_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+HUGGING_FACE_API_KEY = os.getenv('HUGGING_FACE_API_KEY')
 
 
 def generate_song_artwork(track_title, track_artist, predicted_success_rate, region="US"):
