@@ -198,14 +198,16 @@ def load_trades():
     Load trades from trades.jsonl file.
     
     Returns:
-        dict with 'trades' (actual executed trades) and 'runs' (all bot runs including NO TRADE)
+        dict with 'trades' (actual executed trades), 'runs' (all bot runs including NO TRADE),
+        and 'theoretical_trades' (all entries with predictions for theoretical P&L)
     """
     all_runs = []
     actual_trades = []
+    theoretical_trades = []
     
     if not os.path.exists('trades.jsonl'):
         print("No trades.jsonl file found")
-        return {'trades': actual_trades, 'runs': all_runs}
+        return {'trades': actual_trades, 'runs': all_runs, 'theoretical_trades': theoretical_trades}
     
     try:
         with open('trades.jsonl', 'r') as f:
@@ -224,23 +226,32 @@ def load_trades():
                     
                     if status == 'Success' and order_id and 'Buy' in action:
                         actual_trades.append(entry)
+                    
+                    # Count as theoretical trade if it has a prediction
+                    dl = entry.get('decision_log', {})
+                    if isinstance(dl, dict) and dl.get('predicted'):
+                        theoretical_trades.append(entry)
                         
                 except json.JSONDecodeError:
                     continue
     except Exception as e:
         print(f"Error loading trades: {e}")
     
-    return {'trades': actual_trades, 'runs': all_runs}
+    return {'trades': actual_trades, 'runs': all_runs, 'theoretical_trades': theoretical_trades}
 
 
-def calculate_stats(trades, runs):
+def calculate_stats(trades, runs, theoretical_trades=None):
     """
     Calculate trading statistics.
     
     Args:
         trades: List of actual executed trades (Success with order_id)
         runs: List of all bot runs (including NO TRADE, errors, etc.)
+        theoretical_trades: List of all entries with predictions (for theoretical P&L)
     """
+    if theoretical_trades is None:
+        theoretical_trades = []
+    
     if not runs:
         return {
             'total_runs': 0,
@@ -253,7 +264,12 @@ def calculate_stats(trades, runs):
             'total_cost': 0.0,
             'avg_confidence': 0.0,
             'total_pnl': 0.0,
-            'pnl_history': []
+            'pnl_history': [],
+            'theoretical_pnl': 0.0,
+            'theoretical_wins': 0,
+            'theoretical_losses': 0,
+            'theoretical_total': 0,
+            'is_unsuccessful': False
         }
     
     # Count from all runs
@@ -302,6 +318,36 @@ def calculate_stats(trades, runs):
     avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
     success_rate = (successful_trades / len(runs) * 100) if runs else 0.0
     
+    # Calculate theoretical P&L from all predictions
+    theoretical_pnl = 0.0
+    theoretical_wins = 0
+    theoretical_losses = 0
+    theoretical_pnl_history = []
+    running_theoretical_pnl = 0.0
+    
+    for entry in theoretical_trades:
+        settlement = entry.get('settlement', {})
+        theoretical = entry.get('theoretical_settlement', {})
+        
+        # Prefer theoretical_settlement, fall back to settlement
+        pnl_source = theoretical if theoretical else (settlement if isinstance(settlement, dict) else {})
+        pnl = pnl_source.get('pnl', 0) if isinstance(pnl_source, dict) else 0
+        status = pnl_source.get('status', '') if isinstance(pnl_source, dict) else ''
+        correct = pnl_source.get('correct', None) if isinstance(pnl_source, dict) else None
+        
+        if correct is True:
+            theoretical_wins += 1
+        elif correct is False:
+            theoretical_losses += 1
+        
+        if pnl:
+            theoretical_pnl += pnl
+            running_theoretical_pnl += pnl
+            theoretical_pnl_history.append({
+                'timestamp': entry.get('timestamp', ''),
+                'pnl': running_theoretical_pnl
+            })
+    
     return {
         'total_runs': len(runs),
         'total_trades': len(trades),
@@ -313,7 +359,13 @@ def calculate_stats(trades, runs):
         'total_cost': total_cost,
         'avg_confidence': avg_confidence,
         'total_pnl': total_pnl,
-        'pnl_history': pnl_history
+        'pnl_history': pnl_history,
+        'theoretical_pnl': theoretical_pnl,
+        'theoretical_wins': theoretical_wins,
+        'theoretical_losses': theoretical_losses,
+        'theoretical_total': len(theoretical_trades),
+        'is_unsuccessful': theoretical_pnl < 0,
+        'theoretical_pnl_history': theoretical_pnl_history
     }
 
 
@@ -322,7 +374,8 @@ def generate_html_report(data):
     
     trades = data['trades']
     runs = data['runs']
-    stats = calculate_stats(trades, runs)
+    theoretical_trades = data.get('theoretical_trades', [])
+    stats = calculate_stats(trades, runs, theoretical_trades)
     
     # Get recent ACTUAL trades for analysis (not NO TRADE runs)
     recent_trades = sorted(trades, key=lambda x: x.get('timestamp', ''), reverse=True)[:10]
@@ -467,7 +520,7 @@ def generate_html_report(data):
     et_tz = ZoneInfo("America/New_York")
     
     pnl_labels = []
-    for p in stats['pnl_history']:
+    for p in stats['theoretical_pnl_history']:
         ts_str = p['timestamp']
         try:
             # Parse ISO timestamp and convert to ET
@@ -478,7 +531,12 @@ def generate_html_report(data):
             # Fallback to just the date
             pnl_labels.append(ts_str[:10])
     
-    pnl_data = [p['pnl'] for p in stats['pnl_history']]
+    pnl_data = [p['pnl'] for p in stats['theoretical_pnl_history']]
+    
+    # Compute unsuccessful banner before f-string
+    unsuccessful_banner = ''
+    if stats['is_unsuccessful']:
+        unsuccessful_banner = f'''<div style="margin-top: 15px; padding: 12px 24px; background: rgba(255,59,48,0.15); border: 2px solid #ff3b30; border-radius: 10px; display: inline-block;"><span style="color: #ff3b30; font-weight: bold; font-size: 1.1em;">⚠️ UNSUCCESSFUL BOT</span><br><span style="color: #ff6b6b; font-size: 0.85em;">Theoretical P&L: -${abs(stats["theoretical_pnl"]):.2f} over {stats["theoretical_total"]} predictions ({stats["theoretical_wins"]} wins, {stats["theoretical_losses"]} losses)<br>Each win nets only 1¢ — each loss costs 99¢. High accuracy can't overcome the math.</span></div>'''
     
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1020,6 +1078,7 @@ def generate_html_report(data):
             <h1>🎵 Spotify Daily Trading Bot</h1>
             <p class="subtitle">Powered by Kworb Chart Data & Gemini AI Analysis</p>
             <p class="subtitle">Last Updated: {datetime.now(ZoneInfo("America/New_York")).strftime('%B %d, %Y at %I:%M %p ET')}</p>
+            {unsuccessful_banner}
         </header>
         
         <div class="stats-grid">
@@ -1031,32 +1090,32 @@ def generate_html_report(data):
             <div class="stat-card">
                 <div class="stat-label">Actual Trades</div>
                 <div class="stat-value">{stats['total_trades']}</div>
-                <div class="stat-sublabel">Executed orders</div>
+                <div class="stat-sublabel">Executed orders (7)</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">No Trades</div>
                 <div class="stat-value">{stats['no_trade_runs']}</div>
-                <div class="stat-sublabel">No match/markets</div>
+                <div class="stat-sublabel">No Kalshi markets</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Total Cost</div>
+                <div class="stat-label">Actual Cost</div>
                 <div class="stat-value">${stats['total_cost']:.2f}</div>
-                <div class="stat-sublabel">Contracts purchased</div>
+                <div class="stat-sublabel">Real money spent</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Avg Confidence</div>
-                <div class="stat-value">{stats['avg_confidence']:.1f}/10</div>
-                <div class="stat-sublabel">Prediction strength</div>
+                <div class="stat-label">Theoretical P&L</div>
+                <div class="stat-value" style="color: {'#1db954' if stats['theoretical_pnl'] >= 0 else '#ff4444'}">${stats['theoretical_pnl']:.2f}</div>
+                <div class="stat-sublabel">{stats['theoretical_wins']}W / {stats['theoretical_losses']}L — $1/day model</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Total P/L</div>
+                <div class="stat-label">Actual P/L</div>
                 <div class="stat-value" style="color: {'#1db954' if stats['total_pnl'] >= 0 else '#ff4444'}">${stats['total_pnl']:.2f}</div>
-                <div class="stat-sublabel">Profit & Loss</div>
+                <div class="stat-sublabel">Realized P&L</div>
             </div>
         </div>
         
         <div class="pnl-chart-section">
-            <h2 class="section-title">Profit & Loss Chart</h2>
+            <h2 class="section-title">Theoretical P&L Chart ($1/day model)</h2>
             <div class="chart-container">
                 <canvas id="pnlChart"></canvas>
             </div>
