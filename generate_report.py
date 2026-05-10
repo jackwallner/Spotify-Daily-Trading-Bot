@@ -536,7 +536,7 @@ def generate_html_report(data):
     # Compute unsuccessful banner before f-string
     unsuccessful_banner = ''
     if stats['is_unsuccessful']:
-        unsuccessful_banner = f'''<div style="margin-top: 15px; padding: 12px 24px; background: rgba(255,59,48,0.15); border: 2px solid #ff3b30; border-radius: 10px; display: inline-block;"><span style="color: #ff3b30; font-weight: bold; font-size: 1.1em;">⚠️ UNSUCCESSFUL BOT</span><br><span style="color: #ff6b6b; font-size: 0.85em;">Theoretical P&L: -${abs(stats["theoretical_pnl"]):.2f} over {stats["theoretical_total"]} predictions ({stats["theoretical_wins"]} wins, {stats["theoretical_losses"]} losses)<br>Each win nets only 1¢ — each loss costs 99¢. High accuracy can't overcome the math.</span></div>'''
+        unsuccessful_banner = f'''<div style="margin-top: 15px; padding: 12px 24px; background: rgba(255,59,48,0.15); border: 2px solid #ff3b30; border-radius: 10px; display: inline-block;"><span style="color: #ff3b30; font-weight: bold; font-size: 1.1em;">⚠️ UNSUCCESSFUL BOT</span><br><span style="color: #ff6b6b; font-size: 0.85em;">Theoretical P&L: -${abs(stats["theoretical_pnl"]):.2f} over {stats["theoretical_total"]} predictions ({stats["theoretical_wins"]} wins, {stats["theoretical_losses"]} losses)<br>Each win nets only 1&cent;. Each loss costs 99&cent;. High accuracy can't overcome the math.</span></div>'''
     
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1105,7 +1105,7 @@ def generate_html_report(data):
             <div class="stat-card">
                 <div class="stat-label">Theoretical P&L</div>
                 <div class="stat-value" style="color: {'#1db954' if stats['theoretical_pnl'] >= 0 else '#ff4444'}">${stats['theoretical_pnl']:.2f}</div>
-                <div class="stat-sublabel">{stats['theoretical_wins']}W / {stats['theoretical_losses']}L — $1/day model</div>
+                <div class="stat-sublabel">{stats['theoretical_wins']}W / {stats['theoretical_losses']}L, $1/day model</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Actual P/L</div>
