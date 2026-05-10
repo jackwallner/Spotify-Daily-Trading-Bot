@@ -17,7 +17,7 @@ Added `generate_song_artwork()` function:
 - Falls back to styled music icons if generation fails
 - Returns base64-encoded images for embedding in HTML
 
-**Key:** `REDACTED_HF_KEY`
+**Key:** `REDACTED`
 
 ### 2. GitHub Actions Workflow Updated
 
@@ -92,13 +92,13 @@ As of January 2026, Hugging Face deprecated their free Inference API endpoint (`
 ### Required Secret
 
 **Name:** `HUGGING_FACE_API_KEY`  
-**Value:** `REDACTED_HF_KEY`
+**Value:** `REDACTED`
 
 **To configure:**
 1. Go to your repo → Settings → Secrets and variables → Actions
 2. Click "New repository secret"
 3. Name: `HUGGING_FACE_API_KEY`
-4. Value: `REDACTED_HF_KEY`
+4. Value: `REDACTED`
 5. Click "Add secret"
 
 ---
@@ -108,7 +108,7 @@ As of January 2026, Hugging Face deprecated their free Inference API endpoint (`
 ### Local Testing
 
 ```bash
-export HUGGING_FACE_API_KEY="REDACTED_HF_KEY"
+export HUGGING_FACE_API_KEY="REDACTED"
 python3 generate_report.py
 ```
 
