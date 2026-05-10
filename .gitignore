@@ -52,3 +52,4 @@ wheels/
 .DS_Store
 Thumbs.db
 
+.key-replacements.txt
