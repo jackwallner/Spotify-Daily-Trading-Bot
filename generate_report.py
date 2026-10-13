@@ -429,7 +429,7 @@ def generate_html_report(data):
         if artwork_b64:
             artwork_html = f'<img src="data:image/png;base64,{artwork_b64}" alt="{track_title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">'
         else:
-            artwork_html = '<div class="song-icon">🎵</div>'
+            artwork_html = '<div class="song-icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="#1db954" aria-hidden="true"><path d="M9 3v11.3A3.5 3.5 0 1 0 11 17.5V8h6V3H9z"/></svg></div>'
         
         # Create additional artworks HTML
         additional_artworks_html = ""
@@ -463,7 +463,7 @@ def generate_html_report(data):
                     <span class="timestamp">{ts_et.strftime('%m/%d/%y %I:%M%p ET') if timestamp else 'N/A'}</span>
                 </div>
                 <div class="ai-analysis">
-                    <strong>🤖 AI Analysis:</strong>
+                    <strong>Gemini analysis:</strong>
                     <p>{ai_analysis}</p>
                 </div>
                 {additional_artworks_html}
@@ -536,7 +536,7 @@ def generate_html_report(data):
     # Compute unsuccessful banner before f-string
     unsuccessful_banner = ''
     if stats['is_unsuccessful']:
-        unsuccessful_banner = f'''<div style="margin-top: 15px; padding: 12px 24px; background: rgba(255,59,48,0.15); border: 2px solid #ff3b30; border-radius: 10px; display: inline-block;"><span style="color: #ff3b30; font-weight: bold; font-size: 1.1em;">⚠️ UNSUCCESSFUL BOT</span><br><span style="color: #ff6b6b; font-size: 0.85em;">Theoretical P&L: -${abs(stats["theoretical_pnl"]):.2f} over {stats["theoretical_total"]} predictions ({stats["theoretical_wins"]} wins, {stats["theoretical_losses"]} losses)<br>Each win nets only 1&cent;. Each loss costs 99&cent;. High accuracy can't overcome the math.</span></div>'''
+        unsuccessful_banner = f'''<div style="margin-top: 15px; padding: 12px 24px; background: rgba(255,59,48,0.15); border: 2px solid #ff3b30; border-radius: 10px; display: inline-block;"><span style="color: #ff3b30; font-weight: bold; font-size: 1.1em;">UNSUCCESSFUL BOT</span><br><span style="color: #ff6b6b; font-size: 0.85em;">Theoretical P&L: -${abs(stats["theoretical_pnl"]):.2f} over {stats["theoretical_total"]} predictions ({stats["theoretical_wins"]} wins, {stats["theoretical_losses"]} losses)<br>Each win nets only 1&cent;. Each loss costs 99&cent;. High accuracy can't overcome the math.</span></div>'''
     
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1075,8 +1075,8 @@ def generate_html_report(data):
 <body>
     <div class="container">
         <header>
-            <h1>🎵 Spotify Daily Trading Bot</h1>
-            <p class="subtitle">Powered by Kworb Chart Data & Gemini AI Analysis</p>
+            <h1>Spotify Daily Trading Bot</h1>
+            <p class="subtitle">Kworb chart data with Gemini analysis</p>
             <p class="subtitle">Last Updated: {datetime.now(ZoneInfo("America/New_York")).strftime('%B %d, %Y at %I:%M %p ET')}</p>
             {unsuccessful_banner}
         </header>
@@ -1150,9 +1150,9 @@ def generate_html_report(data):
         </div>
         
         <footer>
-            <p>🎵 Spotify Daily Trading Bot</p>
+            <p>Spotify Daily Trading Bot</p>
             <p class="powered-by">
-                Data from <strong>Kworb.net</strong> | AI Analysis by <strong>Gemini</strong> | Trading on <strong>Kalshi</strong>
+                Data from <strong>Kworb.net</strong> | Analysis by <strong>Gemini</strong> | Trading on <strong>Kalshi</strong>
             </p>
         </footer>
     </div>
