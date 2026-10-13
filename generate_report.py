@@ -635,12 +635,7 @@ def generate_html_report(data):
         h1 {{
             font-size: 3em;
             margin-bottom: 10px;
-            background: linear-gradient(90deg, #1db954, #1ed760, #1db954);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: shimmer 3s linear infinite;
+            color: #1db954;
             text-shadow: 0 0 30px rgba(29, 185, 84, 0.3);
         }}
         
